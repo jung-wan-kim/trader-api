@@ -1,5 +1,5 @@
 import { supabaseAdmin } from '../config/supabase.js';
-import logger from '../utils/logger.js';
+import logger from '../utils/logger.ts';
 
 // Strategy definitions for legendary traders
 const LEGENDARY_STRATEGIES = {

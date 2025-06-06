@@ -1,5 +1,5 @@
 import { createClient } from '@supabase/supabase-js';
-import logger from '../utils/logger.js';
+import logger from '../utils/logger.ts';
 
 const supabaseUrl = process.env.SUPABASE_URL;
 const supabaseServiceKey = process.env.SUPABASE_SERVICE_KEY;

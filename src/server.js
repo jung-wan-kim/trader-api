@@ -6,7 +6,7 @@ import compression from 'compression';
 import morgan from 'morgan';
 import { errorHandler } from './middleware/errorHandler.js';
 import { rateLimiter } from './middleware/rateLimiter.js';
-import logger from './utils/logger.js';
+import logger from './utils/logger.ts';
 
 // Import routes
 import authRoutes from './routes/auth.js';

@@ -1,6 +1,6 @@
 import axios from 'axios';
 import NodeCache from 'node-cache';
-import logger from '../utils/logger.js';
+import logger from '../utils/logger.ts';
 
 class FinnhubService {
   constructor() {

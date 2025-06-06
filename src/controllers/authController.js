@@ -1,6 +1,6 @@
 import { supabase, supabaseAdmin } from '../config/supabase.js';
 import { validationResult } from 'express-validator';
-import logger from '../utils/logger.js';
+import logger from '../utils/logger.ts';
 
 // Register new user
 export const register = async (req, res, next) => {
