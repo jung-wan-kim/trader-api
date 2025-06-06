@@ -1,5 +1,5 @@
 import express from 'express';
-import recommendationController from '../controllers/recommendationController.js';
+import * as recommendationController from '../controllers/recommendationController.js';
 import { authenticate, authorize, tierRateLimit } from '../middleware/auth.js';
 import { validateRecommendationQuery, validateFollowRecommendation } from '../validators/recommendation.js';
 

@@ -1,5 +1,5 @@
 import express from 'express';
-import subscriptionController from '../controllers/subscriptionController.js';
+import * as subscriptionController from '../controllers/subscriptionController.js';
 import { authenticate } from '../middleware/auth.js';
 import { validateSubscription, validateUpgrade, validatePaymentMethod } from '../validators/subscription.js';
 

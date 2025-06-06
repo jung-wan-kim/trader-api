@@ -1,5 +1,5 @@
 import express from 'express';
-import portfolioController from '../controllers/portfolioController.js';
+import * as portfolioController from '../controllers/portfolioController.js';
 import { authenticate, authorize } from '../middleware/auth.js';
 import { validatePortfolio, validatePosition, validatePositionUpdate, validateClosePosition } from '../validators/portfolio.js';
 

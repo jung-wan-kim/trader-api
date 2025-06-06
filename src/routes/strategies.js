@@ -1,5 +1,5 @@
 import express from 'express';
-import strategyController from '../controllers/strategyController.js';
+import * as strategyController from '../controllers/strategyController.js';
 import { authenticate, authorize } from '../middleware/auth.js';
 import { validateStrategyId, validateStrategyQuery, validateBacktestRequest, validatePerformanceQuery } from '../validators/strategy.js';
 

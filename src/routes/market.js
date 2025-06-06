@@ -1,5 +1,5 @@
 import express from 'express';
-import marketController from '../controllers/marketController.js';
+import * as marketController from '../controllers/marketController.js';
 import { authenticate } from '../middleware/auth.js';
 import { validateCandleQuery, validateSymbol, validateIndicatorQuery, validateStrategySignalQuery } from '../validators/market.js';
 
