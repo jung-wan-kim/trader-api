@@ -1,4 +1,4 @@
-const { body, validationResult } = require('express-validator');
+import { body, validationResult } from 'express-validator';
 
 const validateRegister = [
   body('email')
@@ -62,3 +62,11 @@ const validatePasswordChange = [
     .custom((value, { req }) => value !== req.body.current_password)
     .withMessage('New password must be different from current password')
 ];
+
+export {
+  validateRegister,
+  validateLogin,
+  validateProfile,
+  validatePasswordChange,
+  validationResult
+};

@@ -1,4 +1,4 @@
-const { body, param } = require('express-validator');
+import { body, param } from 'express-validator';
 
 const validatePortfolio = [
   body('name')
@@ -110,3 +110,10 @@ const validateClosePosition = [
     .isLength({ max: 1000 })
     .withMessage('Notes must not exceed 1000 characters')
 ];
+
+export {
+  validatePortfolio,
+  validatePosition,
+  validatePositionUpdate,
+  validateClosePosition
+};

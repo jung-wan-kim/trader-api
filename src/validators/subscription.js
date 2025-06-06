@@ -1,4 +1,4 @@
-const { body, param } = require('express-validator');
+import { body, param } from 'express-validator';
 
 const validateSubscription = [
   body('plan_id')
@@ -85,3 +85,10 @@ const validateUsageQuery = [
       return true;
     })
 ];
+
+export {
+  validateSubscription,
+  validateUpgrade,
+  validatePaymentMethod,
+  validateUsageQuery
+};

@@ -1,4 +1,4 @@
-const { query, body } = require('express-validator');
+import { query, body } from 'express-validator';
 
 const validateRecommendationQuery = [
   query('strategy_id')
@@ -65,3 +65,8 @@ const validateFollowRecommendation = [
       return true;
     })
 ];
+
+export {
+  validateRecommendationQuery,
+  validateFollowRecommendation
+};

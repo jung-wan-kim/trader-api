@@ -1,4 +1,4 @@
-const { param, query, body } = require('express-validator');
+import { param, query, body } from 'express-validator';
 
 const validateStrategyId = [
   param('id')
@@ -88,3 +88,10 @@ const validatePerformanceQuery = [
     })
     .withMessage('Invalid metrics. Must be comma-separated list of valid metrics')
 ];
+
+export {
+  validateStrategyId,
+  validateStrategyQuery,
+  validateBacktestRequest,
+  validatePerformanceQuery
+};

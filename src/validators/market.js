@@ -1,4 +1,4 @@
-const { param, query } = require('express-validator');
+import { param, query } from 'express-validator';
 
 const validateSymbol = [
   param('symbol')
@@ -74,3 +74,10 @@ const validateStrategySignalQuery = [
     .isIn(['intraday', 'daily', 'weekly', 'monthly'])
     .withMessage('Invalid timeframe. Must be one of: intraday, daily, weekly, monthly')
 ];
+
+export {
+  validateSymbol,
+  validateCandleQuery,
+  validateIndicatorQuery,
+  validateStrategySignalQuery
+};
