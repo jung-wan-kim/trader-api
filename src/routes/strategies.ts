@@ -1,44 +1,31 @@
-const { Router } = require('express');
-const { authenticate } = require('../middleware/auth');
+import { Router } from 'express';
+import { authenticate } from '../middleware/auth.js';
+import * as strategyController from '../controllers/strategyController.js';
 
 const router = Router();
 
 // All routes require authentication
 router.use(authenticate);
 
-// Get all trading strategies - placeholder routes
-router.get('/', (_req: any, res: any) => {
-  res.status(501).json({ error: 'Not implemented', message: 'Trading strategies API will be available soon' });
-});
+// Get all available trading strategies
+router.get('/', strategyController.getStrategies);
 
 // Get user's subscribed strategies
-router.get('/my-strategies', (_req: any, res: any) => {
-  res.status(501).json({ error: 'Not implemented', message: 'User strategies API will be available soon' });
-});
+router.get('/my-strategies', strategyController.getUserStrategies);
 
-// Get strategy by ID
-router.get('/:id', (_req: any, res: any) => {
-  res.status(501).json({ error: 'Not implemented', message: 'Strategy details API will be available soon' });
-});
+// Get strategy by ID with detailed information
+router.get('/:id', strategyController.getStrategyById);
 
-// Subscribe to strategy
-router.post('/:id/subscribe', (_req: any, res: any) => {
-  res.status(501).json({ error: 'Not implemented', message: 'Strategy subscription API will be available soon' });
-});
+// Subscribe to a strategy
+router.post('/:id/subscribe', strategyController.subscribeToStrategy);
 
-// Unsubscribe from strategy
-router.delete('/:id/subscribe', (_req: any, res: any) => {
-  res.status(501).json({ error: 'Not implemented', message: 'Strategy unsubscription API will be available soon' });
-});
+// Unsubscribe from a strategy
+router.delete('/:id/subscribe', strategyController.unsubscribeFromStrategy);
 
 // Get strategy performance metrics
-router.get('/:id/performance', (_req: any, res: any) => {
-  res.status(501).json({ error: 'Not implemented', message: 'Strategy performance API will be available soon' });
-});
+router.get('/:id/performance', strategyController.getStrategyPerformance);
 
-// Backtest strategy
-router.post('/:id/backtest', (_req: any, res: any) => {
-  res.status(501).json({ error: 'Not implemented', message: 'Strategy backtest API will be available soon' });
-});
+// Backtest strategy (Premium/Professional only)
+router.post('/:id/backtest', strategyController.backtestStrategy);
 
-module.exports = router;
+export default router;

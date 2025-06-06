@@ -1,50 +1,41 @@
-const { Router } = require('express');
-const { authenticate } = require('../middleware/auth');
+import { Router } from 'express';
+import { authenticate } from '../middleware/auth.js';
+import { validateSymbol, validateCandleQuery, validateSearchQuery } from '../validators/market.js';
+import * as marketController from '../controllers/marketController.js';
 
 const router = Router();
 
 // All routes require authentication
 router.use(authenticate);
 
-// Temporary placeholder routes
-router.get('/quote/:symbol', (_req: any, res: any) => {
-  res.status(501).json({ error: 'Not implemented', message: 'Market quote API will be available soon' });
-});
+// Real-time quote data
+router.get('/quote/:symbol', validateSymbol, marketController.getQuote);
 
-router.get('/candles/:symbol', (_req: any, res: any) => {
-  res.status(501).json({ error: 'Not implemented', message: 'Market candles API will be available soon' });
-});
+// Candlestick/OHLC data
+router.get('/candles/:symbol', validateSymbol, validateCandleQuery, marketController.getCandles);
 
-router.get('/search', (_req: any, res: any) => {
-  res.status(501).json({ error: 'Not implemented', message: 'Stock search API will be available soon' });
-});
+// Stock search
+router.get('/search', validateSearchQuery, marketController.searchStocks);
 
-router.get('/news/:symbol?', (_req: any, res: any) => {
-  res.status(501).json({ error: 'Not implemented', message: 'Market news API will be available soon' });
-});
+// Market news (general or symbol-specific)
+router.get('/news/:symbol?', marketController.getNews);
 
-router.get('/profile/:symbol', (_req: any, res: any) => {
-  res.status(501).json({ error: 'Not implemented', message: 'Company profile API will be available soon' });
-});
+// Company profile/information
+router.get('/profile/:symbol', validateSymbol, marketController.getCompanyProfile);
 
-router.get('/indicators/:symbol', (_req: any, res: any) => {
-  res.status(501).json({ error: 'Not implemented', message: 'Technical indicators API will be available soon' });
-});
+// Technical indicators and analysis
+router.get('/indicators/:symbol', validateSymbol, marketController.getTechnicalIndicators);
 
-router.get('/sentiment/:symbol', (_req: any, res: any) => {
-  res.status(501).json({ error: 'Not implemented', message: 'Market sentiment API will be available soon' });
-});
+// Market sentiment analysis
+router.get('/sentiment/:symbol', validateSymbol, marketController.getMarketSentiment);
 
-router.get('/earnings', (_req: any, res: any) => {
-  res.status(501).json({ error: 'Not implemented', message: 'Earnings calendar API will be available soon' });
-});
+// Earnings calendar
+router.get('/earnings', marketController.getEarningsCalendar);
 
-router.get('/status', (_req: any, res: any) => {
-  res.status(501).json({ error: 'Not implemented', message: 'Market status API will be available soon' });
-});
+// Market status (open/closed)
+router.get('/status', marketController.getMarketStatus);
 
-router.get('/signals/:symbol/:strategy', (_req: any, res: any) => {
-  res.status(501).json({ error: 'Not implemented', message: 'Strategy signals API will be available soon' });
-});
+// Strategy-specific signals
+router.get('/signals/:symbol', validateSymbol, marketController.getStrategySignals);
 
-module.exports = router;
+export default router;

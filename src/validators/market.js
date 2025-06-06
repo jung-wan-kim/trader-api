@@ -58,6 +58,15 @@ const validateIndicatorQuery = [
     .withMessage('Invalid indicators. Must be comma-separated list of: sma, ema, rsi, macd, bollinger, williams')
 ];
 
+const validateSearchQuery = [
+  query('q')
+    .trim()
+    .isLength({ min: 1, max: 50 })
+    .withMessage('Search query must be between 1 and 50 characters')
+    .matches(/^[a-zA-Z0-9\s\-\.]+$/)
+    .withMessage('Search query contains invalid characters')
+];
+
 const validateStrategySignalQuery = [
   param('symbol')
     .trim()
@@ -78,6 +87,7 @@ const validateStrategySignalQuery = [
 export {
   validateSymbol,
   validateCandleQuery,
+  validateSearchQuery,
   validateIndicatorQuery,
   validateStrategySignalQuery
 };

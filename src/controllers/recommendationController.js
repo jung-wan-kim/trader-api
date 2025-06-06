@@ -1,4 +1,4 @@
-import { supabaseAdmin } from '../config/supabase.js';
+import { supabase } from '../config/database.js';
 import logger from '../utils/logger.ts';
 import { getFinnhubClient } from '../services/finnhubService.js';
 import dayjs from 'dayjs';
@@ -27,7 +27,7 @@ export const getRecommendations = async (req, res, next) => {
     };
 
     // Build base query
-    let query = supabaseAdmin
+    let query = supabase
       .from('recommendations')
       .select(`
         *,
@@ -44,7 +44,7 @@ export const getRecommendations = async (req, res, next) => {
       query = query.eq('strategy_id', strategy_id);
     } else {
       // Get user's subscribed strategies
-      const { data: subscriptions } = await supabaseAdmin
+      const { data: subscriptions } = await supabase
         .from('user_strategy_subscriptions')
         .select('strategy_id')
         .eq('user_id', userId);
@@ -75,7 +75,7 @@ export const getRecommendations = async (req, res, next) => {
     // Check daily limit for basic users
     if (userTier === 'basic' && dailyLimits[userTier]) {
       const today = dayjs().format('YYYY-MM-DD');
-      const { count: todayCount } = await supabaseAdmin
+      const { count: todayCount } = await supabase
         .from('user_recommendation_views')
         .select('*', { count: 'exact', head: true })
         .eq('user_id', userId)
@@ -98,7 +98,7 @@ export const getRecommendations = async (req, res, next) => {
       }));
 
       if (viewsToLog.length > 0) {
-        await supabaseAdmin
+        await supabase
           .from('user_recommendation_views')
           .insert(viewsToLog);
       }
@@ -132,7 +132,7 @@ export const getRecommendationById = async (req, res, next) => {
     const userId = req.user.id;
     const userTier = req.user.subscription_tier || 'basic';
 
-    const { data: recommendation, error } = await supabaseAdmin
+    const { data: recommendation, error } = await supabase
       .from('recommendations')
       .select(`
         *,
@@ -170,7 +170,7 @@ export const getRecommendationById = async (req, res, next) => {
     }
 
     // Get performance if position exists
-    const { data: positions } = await supabaseAdmin
+    const { data: positions } = await supabase
       .from('positions')
       .select('*')
       .eq('recommendation_id', id);
@@ -212,7 +212,7 @@ export const getRecommendationsByStrategy = async (req, res, next) => {
       });
     }
 
-    const { data: recommendations, error, count } = await supabaseAdmin
+    const { data: recommendations, error, count } = await supabase
       .from('recommendations')
       .select('*', { count: 'exact' })
       .eq('strategy_id', strategyId)
@@ -280,7 +280,7 @@ export const followRecommendation = async (req, res, next) => {
     } = req.body;
 
     // Get recommendation details
-    const { data: recommendation, error: recError } = await supabaseAdmin
+    const { data: recommendation, error: recError } = await supabase
       .from('recommendations')
       .select('*')
       .eq('id', id)
@@ -295,7 +295,7 @@ export const followRecommendation = async (req, res, next) => {
     }
 
     // Verify portfolio ownership
-    const { data: portfolio, error: portError } = await supabaseAdmin
+    const { data: portfolio, error: portError } = await supabase
       .from('portfolios')
       .select('*')
       .eq('id', portfolio_id)
@@ -321,7 +321,7 @@ export const followRecommendation = async (req, res, next) => {
     }
 
     // Create position
-    const { data: position, error: posError } = await supabaseAdmin
+    const { data: position, error: posError } = await supabase
       .from('positions')
       .insert({
         portfolio_id,
@@ -345,7 +345,7 @@ export const followRecommendation = async (req, res, next) => {
 
     // Update portfolio
     const newCashBalance = portfolio.cash_balance - positionValue;
-    await supabaseAdmin
+    await supabase
       .from('portfolios')
       .update({
         cash_balance: newCashBalance,
@@ -354,7 +354,7 @@ export const followRecommendation = async (req, res, next) => {
       .eq('id', portfolio_id);
 
     // Log activity
-    await supabaseAdmin
+    await supabase
       .from('trading_activities')
       .insert({
         user_id: userId,
@@ -388,7 +388,7 @@ export const toggleLike = async (req, res, next) => {
     const userId = req.user.id;
 
     // Check if already liked
-    const { data: existingLike } = await supabaseAdmin
+    const { data: existingLike } = await supabase
       .from('recommendation_likes')
       .select('*')
       .eq('user_id', userId)
@@ -397,13 +397,13 @@ export const toggleLike = async (req, res, next) => {
 
     if (existingLike) {
       // Unlike
-      await supabaseAdmin
+      await supabase
         .from('recommendation_likes')
         .delete()
         .eq('user_id', userId)
         .eq('recommendation_id', id);
 
-      await supabaseAdmin.rpc('decrement_recommendation_likes', { 
+      await supabase.rpc('decrement_recommendation_likes', { 
         recommendation_id_param: id 
       });
 
@@ -413,14 +413,14 @@ export const toggleLike = async (req, res, next) => {
       });
     } else {
       // Like
-      await supabaseAdmin
+      await supabase
         .from('recommendation_likes')
         .insert({
           user_id: userId,
           recommendation_id: id
         });
 
-      await supabaseAdmin.rpc('increment_recommendation_likes', { 
+      await supabase.rpc('increment_recommendation_likes', { 
         recommendation_id_param: id 
       });
 
@@ -440,7 +440,7 @@ export const getRecommendationPerformance = async (req, res, next) => {
     const { id } = req.params;
 
     // Get recommendation
-    const { data: recommendation, error: recError } = await supabaseAdmin
+    const { data: recommendation, error: recError } = await supabase
       .from('recommendations')
       .select('*')
       .eq('id', id)
@@ -454,7 +454,7 @@ export const getRecommendationPerformance = async (req, res, next) => {
     }
 
     // Get all positions based on this recommendation
-    const { data: positions, error: posError } = await supabaseAdmin
+    const { data: positions, error: posError } = await supabase
       .from('positions')
       .select('*')
       .eq('recommendation_id', id);

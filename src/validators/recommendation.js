@@ -66,7 +66,11 @@ const validateFollowRecommendation = [
     })
 ];
 
+// Alias for following recommendation validation
+const validateRecommendation = validateFollowRecommendation;
+
 export {
   validateRecommendationQuery,
-  validateFollowRecommendation
+  validateFollowRecommendation,
+  validateRecommendation
 };

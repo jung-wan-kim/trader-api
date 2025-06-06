@@ -1,4 +1,4 @@
-import { supabaseAdmin } from '../config/supabase.js';
+import { supabase } from '../config/database.js';
 import finnhubService from '../services/finnhubService.js';
 import logger from '../utils/logger.ts';
 import { validationResult } from 'express-validator';
@@ -8,7 +8,7 @@ export const getPortfolios = async (req, res, next) => {
   try {
     const userId = req.user.id;
 
-    const { data: portfolios, error } = await supabaseAdmin
+    const { data: portfolios, error } = await supabase
       .from('portfolios')
       .select(`
         *,
@@ -72,7 +72,7 @@ export const getPortfolioById = async (req, res, next) => {
     const userId = req.user.id;
     const { id } = req.params;
 
-    const { data: portfolio, error } = await supabaseAdmin
+    const { data: portfolio, error } = await supabase
       .from('portfolios')
       .select(`
         *,
@@ -137,7 +137,7 @@ export const createPortfolio = async (req, res, next) => {
     const userId = req.user.id;
     const { name, initial_capital, description } = req.body;
 
-    const { data: portfolio, error } = await supabaseAdmin
+    const { data: portfolio, error } = await supabase
       .from('portfolios')
       .insert({
         user_id: userId,
@@ -177,7 +177,7 @@ export const updatePortfolio = async (req, res, next) => {
     const { name, description } = req.body;
 
     // Verify ownership
-    const { data: existing } = await supabaseAdmin
+    const { data: existing } = await supabase
       .from('portfolios')
       .select('id')
       .eq('id', id)
@@ -196,7 +196,7 @@ export const updatePortfolio = async (req, res, next) => {
     if (description !== undefined) updateData.description = description;
     updateData.updated_at = new Date().toISOString();
 
-    const { data: portfolio, error } = await supabaseAdmin
+    const { data: portfolio, error } = await supabase
       .from('portfolios')
       .update(updateData)
       .eq('id', id)
@@ -221,7 +221,7 @@ export const deletePortfolio = async (req, res, next) => {
     const { id } = req.params;
 
     // Check ownership and open positions
-    const { data: portfolio, error: getError } = await supabaseAdmin
+    const { data: portfolio, error: getError } = await supabase
       .from('portfolios')
       .select(`
         *,
@@ -247,7 +247,7 @@ export const deletePortfolio = async (req, res, next) => {
     }
 
     // Delete portfolio (cascade will handle positions)
-    const { error: deleteError } = await supabaseAdmin
+    const { error: deleteError } = await supabase
       .from('portfolios')
       .delete()
       .eq('id', id);
@@ -270,7 +270,7 @@ export const getPortfolioPerformance = async (req, res, next) => {
     const { period = '1M' } = req.query;
 
     // Verify ownership
-    const { data: portfolio, error: portError } = await supabaseAdmin
+    const { data: portfolio, error: portError } = await supabase
       .from('portfolios')
       .select('*')
       .eq('id', id)
@@ -287,7 +287,7 @@ export const getPortfolioPerformance = async (req, res, next) => {
     // Get closed positions for the period
     const startDate = getStartDate(period);
     
-    const { data: positions, error: posError } = await supabaseAdmin
+    const { data: positions, error: posError } = await supabase
       .from('positions')
       .select('*')
       .eq('portfolio_id', id)
@@ -375,7 +375,7 @@ export const getPositions = async (req, res, next) => {
     const { status = 'all', limit = 50, offset = 0 } = req.query;
 
     // Verify portfolio ownership
-    const { data: portfolio } = await supabaseAdmin
+    const { data: portfolio } = await supabase
       .from('portfolios')
       .select('id')
       .eq('id', portfolioId)
@@ -389,7 +389,7 @@ export const getPositions = async (req, res, next) => {
       });
     }
 
-    let query = supabaseAdmin
+    let query = supabase
       .from('positions')
       .select('*', { count: 'exact' })
       .eq('portfolio_id', portfolioId);
@@ -458,7 +458,7 @@ export const addPosition = async (req, res, next) => {
     } = req.body;
 
     // Verify portfolio ownership
-    const { data: portfolio, error: portError } = await supabaseAdmin
+    const { data: portfolio, error: portError } = await supabase
       .from('portfolios')
       .select('*')
       .eq('id', portfolioId)
@@ -482,7 +482,7 @@ export const addPosition = async (req, res, next) => {
     }
 
     // Create position
-    const { data: position, error: posError } = await supabaseAdmin
+    const { data: position, error: posError } = await supabase
       .from('positions')
       .insert({
         portfolio_id: portfolioId,
@@ -507,7 +507,7 @@ export const addPosition = async (req, res, next) => {
 
     // Update portfolio cash balance
     const newCashBalance = portfolio.cash_balance - positionValue;
-    await supabaseAdmin
+    await supabase
       .from('portfolios')
       .update({
         cash_balance: newCashBalance,
@@ -516,7 +516,7 @@ export const addPosition = async (req, res, next) => {
       .eq('id', portfolioId);
 
     // Log activity
-    await supabaseAdmin
+    await supabase
       .from('trading_activities')
       .insert({
         user_id: userId,
@@ -555,7 +555,7 @@ export const updatePosition = async (req, res, next) => {
     const { stop_loss, take_profit, notes } = req.body;
 
     // Verify position ownership
-    const { data: position, error: getError } = await supabaseAdmin
+    const { data: position, error: getError } = await supabase
       .from('positions')
       .select('*, portfolio:portfolios!inner(user_id)')
       .eq('id', id)
@@ -581,7 +581,7 @@ export const updatePosition = async (req, res, next) => {
     if (take_profit !== undefined) updates.take_profit = take_profit;
     if (notes !== undefined) updates.notes = notes;
 
-    const { data: updated, error: updateError } = await supabaseAdmin
+    const { data: updated, error: updateError } = await supabase
       .from('positions')
       .update(updates)
       .eq('id', id)
@@ -612,7 +612,7 @@ export const closePosition = async (req, res, next) => {
     const { exit_price, notes } = req.body;
 
     // Verify position ownership
-    const { data: position, error: getError } = await supabaseAdmin
+    const { data: position, error: getError } = await supabase
       .from('positions')
       .select('*, portfolio:portfolios!inner(*)')
       .eq('id', id)
@@ -654,7 +654,7 @@ export const closePosition = async (req, res, next) => {
     const profitLossPercent = ((exitPrice - position.entry_price) / position.entry_price * 100).toFixed(2);
 
     // Close position
-    const { data: closed, error: closeError } = await supabaseAdmin
+    const { data: closed, error: closeError } = await supabase
       .from('positions')
       .update({
         status: 'closed',
@@ -674,7 +674,7 @@ export const closePosition = async (req, res, next) => {
     const newCashBalance = position.portfolio.cash_balance + (position.quantity * exitPrice);
     const newRealizedPL = (position.portfolio.realized_profit_loss || 0) + profitLoss;
     
-    await supabaseAdmin
+    await supabase
       .from('portfolios')
       .update({
         cash_balance: newCashBalance,
@@ -684,7 +684,7 @@ export const closePosition = async (req, res, next) => {
       .eq('id', position.portfolio_id);
 
     // Log activity
-    await supabaseAdmin
+    await supabase
       .from('trading_activities')
       .insert({
         user_id: userId,
@@ -720,7 +720,7 @@ export const getTradingHistory = async (req, res, next) => {
     const { limit = 50, offset = 0 } = req.query;
 
     // Verify portfolio ownership
-    const { data: portfolio } = await supabaseAdmin
+    const { data: portfolio } = await supabase
       .from('portfolios')
       .select('id')
       .eq('id', portfolioId)
@@ -734,7 +734,7 @@ export const getTradingHistory = async (req, res, next) => {
       });
     }
 
-    const { data: history, error, count } = await supabaseAdmin
+    const { data: history, error, count } = await supabase
       .from('positions')
       .select('*', { count: 'exact' })
       .eq('portfolio_id', portfolioId)

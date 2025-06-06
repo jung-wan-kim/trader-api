@@ -1,5 +1,5 @@
 import finnhubService from '../services/finnhubService.js';
-import { supabaseAdmin } from '../config/supabase.js';
+import { supabase } from '../config/database.js';
 import logger from '../utils/logger.ts';
 
 // Get real-time quote

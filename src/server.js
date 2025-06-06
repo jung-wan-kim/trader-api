@@ -41,12 +41,12 @@ app.get('/health', (req, res) => {
 });
 
 // API Routes
-app.use('/api/auth', authRoutes);
-app.use('/api/recommendations', recommendationRoutes);
-app.use('/api/market', marketRoutes);
-app.use('/api/portfolio', portfolioRoutes);
-app.use('/api/strategies', strategyRoutes);
-app.use('/api/subscription', subscriptionRoutes);
+app.use('/api/v1/auth', authRoutes);
+app.use('/api/v1/recommendations', recommendationRoutes);
+app.use('/api/v1/market', marketRoutes);
+app.use('/api/v1/portfolio', portfolioRoutes);
+app.use('/api/v1/strategies', strategyRoutes);
+app.use('/api/v1/subscription', subscriptionRoutes);
 
 // 404 handler
 app.use((req, res) => {

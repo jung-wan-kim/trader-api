@@ -1,4 +1,4 @@
-import { supabaseAdmin } from '../config/supabase.js';
+import { supabase } from '../config/database.js';
 import logger from '../utils/logger.ts';
 
 // Strategy definitions for legendary traders
@@ -86,7 +86,7 @@ export const getStrategies = async (req, res, next) => {
 
     // Get performance data from database
     const strategyIds = availableStrategies.map(s => s.id);
-    const { data: performanceData, error } = await supabaseAdmin
+    const { data: performanceData, error } = await supabase
       .from('strategy_performance')
       .select('*')
       .in('strategy_id', strategyIds);
@@ -144,7 +144,7 @@ export const getStrategyById = async (req, res, next) => {
     }
 
     // Get detailed performance data
-    const { data: performance, error: perfError } = await supabaseAdmin
+    const { data: performance, error: perfError } = await supabase
       .from('strategy_performance')
       .select('*')
       .eq('strategy_id', id)
@@ -158,7 +158,7 @@ export const getStrategyById = async (req, res, next) => {
     const thirtyDaysAgo = new Date();
     thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
 
-    const { data: recentRecommendations, error: recError } = await supabaseAdmin
+    const { data: recentRecommendations, error: recError } = await supabase
       .from('recommendations')
       .select('*')
       .eq('strategy_id', id)
@@ -207,7 +207,7 @@ export const subscribeToStrategy = async (req, res, next) => {
     }
 
     // Check if already subscribed
-    const { data: existing } = await supabaseAdmin
+    const { data: existing } = await supabase
       .from('user_strategy_subscriptions')
       .select('*')
       .eq('user_id', userId)
@@ -222,7 +222,7 @@ export const subscribeToStrategy = async (req, res, next) => {
     }
 
     // Create subscription
-    const { error: subError } = await supabaseAdmin
+    const { error: subError } = await supabase
       .from('user_strategy_subscriptions')
       .insert({
         user_id: userId,
@@ -233,7 +233,7 @@ export const subscribeToStrategy = async (req, res, next) => {
     if (subError) throw subError;
 
     // Update subscriber count
-    await supabaseAdmin.rpc('increment_strategy_subscribers', { 
+    await supabase.rpc('increment_strategy_subscribers', { 
       strategy_id_param: id 
     });
 
@@ -257,7 +257,7 @@ export const unsubscribeFromStrategy = async (req, res, next) => {
     const { id } = req.params;
     const userId = req.user.id;
 
-    const { error } = await supabaseAdmin
+    const { error } = await supabase
       .from('user_strategy_subscriptions')
       .delete()
       .eq('user_id', userId)
@@ -266,7 +266,7 @@ export const unsubscribeFromStrategy = async (req, res, next) => {
     if (error) throw error;
 
     // Update subscriber count
-    await supabaseAdmin.rpc('decrement_strategy_subscribers', { 
+    await supabase.rpc('decrement_strategy_subscribers', { 
       strategy_id_param: id 
     });
 
@@ -307,7 +307,7 @@ export const getStrategyPerformance = async (req, res, next) => {
     // Get recommendations for the period
     const startDate = getStartDate(period);
     
-    const { data: recommendations, error: recError } = await supabaseAdmin
+    const { data: recommendations, error: recError } = await supabase
       .from('recommendations')
       .select('*')
       .eq('strategy_id', id)
@@ -318,7 +318,7 @@ export const getStrategyPerformance = async (req, res, next) => {
     // Get positions based on these recommendations
     const recommendationIds = recommendations.map(r => r.id);
     
-    const { data: positions, error: posError } = await supabaseAdmin
+    const { data: positions, error: posError } = await supabase
       .from('positions')
       .select('*')
       .in('recommendation_id', recommendationIds);
@@ -372,7 +372,7 @@ export const getUserStrategies = async (req, res, next) => {
   try {
     const userId = req.user.id;
 
-    const { data: subscriptions, error } = await supabaseAdmin
+    const { data: subscriptions, error } = await supabase
       .from('user_strategy_subscriptions')
       .select('strategy_id, subscribed_at')
       .eq('user_id', userId);
