@@ -1,12 +1,8 @@
-import winston from 'winston';
-import path from 'path';
-import { fileURLToPath } from 'url';
-import { dirname } from 'path';
-import fs from 'fs';
+const winston = require('winston');
+const path = require('path');
+const fs = require('fs');
 
-// ES 모듈 환경에서 __dirname 얻기
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = dirname(__filename);
+// CommonJS 환경에서는 __dirname이 자동으로 사용 가능
 
 // 로그 디렉토리 설정
 const logDir = path.join(__dirname, '../../logs');
@@ -112,7 +108,7 @@ const extendedLogger = logger as ExtendedLogger;
 extendedLogger.stream = stream;
 
 // 유틸리티 함수들
-export const logError = (error: Error | unknown, context?: Record<string, any>): void => {
+const logError = (error: Error | unknown, context?: Record<string, any>): void => {
   if (error instanceof Error) {
     logger.error(error.message, { 
       stack: error.stack,
@@ -124,7 +120,7 @@ export const logError = (error: Error | unknown, context?: Record<string, any>):
   }
 };
 
-export const logRequest = (req: any, res: any, responseTime: number): void => {
+const logRequest = (req: any, res: any, responseTime: number): void => {
   const { method, url, ip, headers } = req;
   const { statusCode } = res;
   
@@ -138,7 +134,7 @@ export const logRequest = (req: any, res: any, responseTime: number): void => {
   });
 };
 
-export const logDatabaseQuery = (query: string, params?: any[], duration?: number): void => {
+const logDatabaseQuery = (query: string, params?: any[], duration?: number): void => {
   logger.debug('Database Query', {
     query,
     params,
@@ -146,7 +142,7 @@ export const logDatabaseQuery = (query: string, params?: any[], duration?: numbe
   });
 };
 
-export const logApiCall = (service: string, endpoint: string, response?: any, error?: Error): void => {
+const logApiCall = (service: string, endpoint: string, response?: any, error?: Error): void => {
   if (error) {
     logger.error(`API Call Failed: ${service}`, {
       endpoint,
@@ -168,4 +164,14 @@ logger.info('Logger initialized', {
   logDirectory: logDir
 });
 
-export default extendedLogger;
+// CommonJS exports
+exports.logError = logError;
+exports.logRequest = logRequest;
+exports.logDatabaseQuery = logDatabaseQuery;
+exports.logApiCall = logApiCall;
+
+module.exports = extendedLogger;
+module.exports.logError = logError;
+module.exports.logRequest = logRequest;
+module.exports.logDatabaseQuery = logDatabaseQuery;
+module.exports.logApiCall = logApiCall;

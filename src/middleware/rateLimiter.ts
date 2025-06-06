@@ -1,4 +1,7 @@
-import rateLimit, { RateLimitRequestHandler } from 'express-rate-limit';
+const rateLimit = require('express-rate-limit');
+
+// TypeScript 타입 임포트
+import type { RateLimitRequestHandler } from 'express-rate-limit';
 
 /**
  * Rate Limiting 설정
@@ -104,8 +107,8 @@ const createDynamicRateLimiter = (
   });
 };
 
-// Rate limiter 그룹 export
-export const rateLimiter = {
+// Rate limiter 그룹
+const rateLimiter = {
   default: defaultRateLimiter,
   standard: defaultRateLimiter, // alias
   strict: strictRateLimiter,
@@ -117,5 +120,9 @@ export const rateLimiter = {
   createDynamicRateLimiter,
 };
 
+// CommonJS exports
+exports.rateLimiter = rateLimiter;
+
 // 기본 export (하위 호환성)
-export default rateLimiter.default;
+module.exports = rateLimiter.default;
+module.exports.rateLimiter = rateLimiter;

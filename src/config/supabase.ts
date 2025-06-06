@@ -1,5 +1,8 @@
-import { createClient, SupabaseClient } from '@supabase/supabase-js';
-import dotenv from 'dotenv';
+const { createClient } = require('@supabase/supabase-js');
+const dotenv = require('dotenv');
+
+// TypeScript 타입 임포트
+import type { SupabaseClient } from '@supabase/supabase-js';
 
 dotenv.config();
 
@@ -17,7 +20,7 @@ if (!supabaseUrl || !supabaseAnonKey) {
 }
 
 // Supabase 클라이언트 인스턴스 생성
-export const supabase: SupabaseClient = createClient(supabaseUrl, supabaseAnonKey, {
+const supabase: SupabaseClient = createClient(supabaseUrl, supabaseAnonKey, {
   auth: {
     autoRefreshToken: true,
     persistSession: true,
@@ -38,7 +41,7 @@ export const supabase: SupabaseClient = createClient(supabaseUrl, supabaseAnonKe
  */
 
 // 사용자 타입
-export interface User {
+interface User {
   id: string;
   email: string;
   created_at: string;
@@ -48,7 +51,7 @@ export interface User {
 }
 
 // 포트폴리오 타입
-export interface Portfolio {
+interface Portfolio {
   id: string;
   user_id: string;
   symbol: string;
@@ -64,7 +67,7 @@ export interface Portfolio {
 }
 
 // 추천 타입
-export interface Recommendation {
+interface Recommendation {
   id: string;
   symbol: string;
   strategy: 'livermore' | 'williams' | 'weinstein';
@@ -79,7 +82,7 @@ export interface Recommendation {
 }
 
 // 거래 히스토리 타입
-export interface TradeHistory {
+interface TradeHistory {
   id: string;
   user_id: string;
   portfolio_id: string;
@@ -94,7 +97,7 @@ export interface TradeHistory {
 }
 
 // 알림 타입
-export interface Notification {
+interface Notification {
   id: string;
   user_id: string;
   type: 'price_alert' | 'stop_loss_triggered' | 'take_profit_reached' | 'new_recommendation';
@@ -110,7 +113,7 @@ export interface Notification {
  */
 
 // 에러 처리 헬퍼
-export function handleSupabaseError(error: any): Error {
+function handleSupabaseError(error: any): Error {
   if (error?.message) {
     return new Error(error.message);
   }
@@ -118,7 +121,7 @@ export function handleSupabaseError(error: any): Error {
 }
 
 // 재시도 로직을 포함한 쿼리 실행
-export async function executeWithRetry<T>(
+async function executeWithRetry<T>(
   queryFn: () => Promise<{ data: T | null; error: any }>,
   maxRetries: number = 3
 ): Promise<T> {
@@ -155,7 +158,7 @@ export async function executeWithRetry<T>(
 }
 
 // 트랜잭션 시뮬레이션 (Supabase는 직접적인 트랜잭션을 지원하지 않음)
-export async function executeTransaction<T>(
+async function executeTransaction<T>(
   operations: Array<() => Promise<{ data: any; error: any }>>
 ): Promise<T[]> {
   const results: T[] = [];
@@ -186,4 +189,17 @@ export async function executeTransaction<T>(
   }
 }
 
-export default supabase;
+// CommonJS exports
+exports.supabase = supabase;
+exports.handleSupabaseError = handleSupabaseError;
+exports.executeWithRetry = executeWithRetry;
+exports.executeTransaction = executeTransaction;
+
+// TypeScript 타입 export
+export type { User, Portfolio, Recommendation, TradeHistory, Notification };
+
+module.exports = supabase;
+module.exports.supabase = supabase;
+module.exports.handleSupabaseError = handleSupabaseError;
+module.exports.executeWithRetry = executeWithRetry;
+module.exports.executeTransaction = executeTransaction;

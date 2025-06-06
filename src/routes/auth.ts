@@ -1,8 +1,8 @@
-import { Router } from 'express';
-import { body, validationResult } from 'express-validator';
-import * as authController from '../controllers/authController';
-import { authenticate } from '../middleware/auth';
-import { rateLimiter } from '../middleware/rateLimiter';
+const { Router } = require('express');
+const { body, validationResult } = require('express-validator');
+const authController = require('../controllers/authController');
+const { authenticate } = require('../middleware/auth');
+const { rateLimiter } = require('../middleware/rateLimiter');
 
 /**
  * 인증 라우터
@@ -239,4 +239,4 @@ router.post('/verify-email/confirm',
   }
 );
 
-export default router;
+module.exports = router;

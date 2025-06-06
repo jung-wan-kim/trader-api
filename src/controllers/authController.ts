@@ -1,8 +1,10 @@
-import { Request, Response } from 'express';
-import bcrypt from 'bcryptjs';
-import jwt from 'jsonwebtoken';
-import { supabase } from '../config/supabase';
-import { validationResult } from 'express-validator';
+const bcrypt = require('bcryptjs');
+const jwt = require('jsonwebtoken');
+const { supabase } = require('../config/supabase');
+const { validationResult } = require('express-validator');
+
+// TypeScript 타입 임포트
+import type { Request, Response } from 'express';
 
 /**
  * 인증 컨트롤러
@@ -72,7 +74,7 @@ async function verifyPassword(password: string, hash: string): Promise<boolean> 
 /**
  * 회원가입
  */
-export const register = async (req: Request, res: Response): Promise<void> => {
+const register = async (req: Request, res: Response): Promise<void> => {
   try {
     // 입력 검증
     const errors = validationResult(req);
@@ -170,7 +172,7 @@ export const register = async (req: Request, res: Response): Promise<void> => {
 /**
  * 로그인
  */
-export const login = async (req: Request, res: Response): Promise<void> => {
+const login = async (req: Request, res: Response): Promise<void> => {
   try {
     // 입력 검증
     const errors = validationResult(req);
@@ -254,7 +256,7 @@ export const login = async (req: Request, res: Response): Promise<void> => {
 /**
  * 로그아웃
  */
-export const logout = async (_req: Request, res: Response): Promise<void> => {
+const logout = async (_req: Request, res: Response): Promise<void> => {
   try {
     // Supabase Auth 세션 종료
     const { error } = await supabase.auth.signOut();
@@ -279,7 +281,7 @@ export const logout = async (_req: Request, res: Response): Promise<void> => {
 /**
  * 토큰 갱신
  */
-export const refreshToken = async (req: Request, res: Response): Promise<void> => {
+const refreshToken = async (req: Request, res: Response): Promise<void> => {
   try {
     if (!req.user) {
       res.status(401).json({
@@ -319,7 +321,7 @@ export const refreshToken = async (req: Request, res: Response): Promise<void> =
 /**
  * 현재 사용자 정보 조회
  */
-export const getCurrentUser = async (req: Request, res: Response): Promise<void> => {
+const getCurrentUser = async (req: Request, res: Response): Promise<void> => {
   try {
     if (!req.user) {
       res.status(401).json({
@@ -369,7 +371,7 @@ export const getCurrentUser = async (req: Request, res: Response): Promise<void>
 /**
  * 비밀번호 변경
  */
-export const changePassword = async (req: Request, res: Response): Promise<void> => {
+const changePassword = async (req: Request, res: Response): Promise<void> => {
   try {
     if (!req.user) {
       res.status(401).json({
@@ -446,7 +448,7 @@ export const changePassword = async (req: Request, res: Response): Promise<void>
 /**
  * 계정 삭제
  */
-export const deleteAccount = async (req: Request, res: Response): Promise<void> => {
+const deleteAccount = async (req: Request, res: Response): Promise<void> => {
   try {
     if (!req.user) {
       res.status(401).json({
@@ -516,7 +518,16 @@ export const deleteAccount = async (req: Request, res: Response): Promise<void> 
   }
 };
 
-export default {
+// CommonJS exports
+exports.register = register;
+exports.login = login;
+exports.logout = logout;
+exports.refreshToken = refreshToken;
+exports.getCurrentUser = getCurrentUser;
+exports.changePassword = changePassword;
+exports.deleteAccount = deleteAccount;
+
+module.exports = {
   register,
   login,
   logout,

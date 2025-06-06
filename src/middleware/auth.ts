@@ -1,6 +1,8 @@
-import { Request, Response, NextFunction } from 'express';
-import jwt from 'jsonwebtoken';
-import { supabase } from '../config/supabase';
+const jwt = require('jsonwebtoken');
+const { supabase } = require('../config/supabase');
+
+// TypeScript 타입 임포트
+import type { Request, Response, NextFunction } from 'express';
 
 /**
  * 인증 미들웨어
@@ -71,7 +73,7 @@ function extractToken(authHeader: string | undefined): string | null {
 /**
  * 인증 미들웨어
  */
-export const authenticate = async (
+const authenticate = async (
   req: Request,
   res: Response,
   next: NextFunction
@@ -160,7 +162,7 @@ export const authenticate = async (
  * 선택적 인증 미들웨어
  * @description 인증이 선택적인 엔드포인트에서 사용
  */
-export const optionalAuthenticate = async (
+const optionalAuthenticate = async (
   req: Request,
   _res: Response,
   next: NextFunction
@@ -196,7 +198,7 @@ export const optionalAuthenticate = async (
 /**
  * 구독 티어 확인 미들웨어
  */
-export const requireSubscription = (
+const requireSubscription = (
   requiredTiers: Array<'basic' | 'premium' | 'professional'>
 ) => {
   return (req: Request, res: Response, next: NextFunction): void => {
@@ -224,7 +226,7 @@ export const requireSubscription = (
  * API 키 인증 미들웨어
  * @description API 키를 사용한 인증 (외부 서비스 연동용)
  */
-export const authenticateAPIKey = async (
+const authenticateAPIKey = async (
   req: Request,
   res: Response,
   next: NextFunction
@@ -305,7 +307,7 @@ export const authenticateAPIKey = async (
 /**
  * 토큰 갱신 함수
  */
-export async function refreshToken(oldToken: string): Promise<string> {
+async function refreshToken(oldToken: string): Promise<string> {
   try {
     const payload = verifyToken(oldToken);
     
@@ -331,4 +333,16 @@ export async function refreshToken(oldToken: string): Promise<string> {
   }
 }
 
-export default authenticate;
+// CommonJS exports
+exports.authenticate = authenticate;
+exports.optionalAuthenticate = optionalAuthenticate;
+exports.requireSubscription = requireSubscription;
+exports.authenticateAPIKey = authenticateAPIKey;
+exports.refreshToken = refreshToken;
+
+module.exports = authenticate;
+module.exports.authenticate = authenticate;
+module.exports.optionalAuthenticate = optionalAuthenticate;
+module.exports.requireSubscription = requireSubscription;
+module.exports.authenticateAPIKey = authenticateAPIKey;
+module.exports.refreshToken = refreshToken;

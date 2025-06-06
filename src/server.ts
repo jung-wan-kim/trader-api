@@ -1,31 +1,34 @@
-import express, { Application, Request, Response } from 'express';
-import cors from 'cors';
-import helmet from 'helmet';
-import morgan from 'morgan';
-import compression from 'compression';
-import dotenv from 'dotenv';
-import { createServer } from 'http';
-import { WebSocketServer } from 'ws';
+const express = require('express');
+const cors = require('cors');
+const helmet = require('helmet');
+const morgan = require('morgan');
+const compression = require('compression');
+const dotenv = require('dotenv');
+const { createServer } = require('http');
+const { WebSocketServer } = require('ws');
+
+// TypeScript 타입 임포트
+import type { Application, Request, Response } from 'express';
 
 // 환경 변수 로드
 dotenv.config();
 
 // 미들웨어 임포트
-import { errorHandler } from './middleware/errorHandler';
-import { rateLimiter } from './middleware/rateLimiter';
+const { errorHandler } = require('./middleware/errorHandler');
+const { rateLimiter } = require('./middleware/rateLimiter');
 
 // 라우터 임포트
-import authRoutes from './routes/auth';
-import marketRoutes from './routes/market';
-import portfolioRoutes from './routes/portfolio';
-import recommendationRoutes from './routes/recommendations';
-import strategyRoutes from './routes/strategies';
+const authRoutes = require('./routes/auth');
+const marketRoutes = require('./routes/market');
+const portfolioRoutes = require('./routes/portfolio');
+const recommendationRoutes = require('./routes/recommendations');
+const strategyRoutes = require('./routes/strategies');
 
 // 유틸리티 임포트
-import logger from './utils/logger';
+const logger = require('./utils/logger');
 
 // Supabase 클라이언트 임포트
-import { supabase } from './config/supabase';
+const { supabase } = require('./config/supabase');
 
 /**
  * Express 애플리케이션 설정
@@ -350,4 +353,4 @@ if (require.main === module) {
   startServer();
 }
 
-export { app, server };
+module.exports = { app, server };
