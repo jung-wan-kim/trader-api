@@ -2,7 +2,54 @@ import finnhubService from '../services/finnhubService.js';
 import { supabase } from '../config/database.js';
 import logger from '../utils/logger.ts';
 
-// Get real-time quote
+/**
+ * @swagger
+ * /market/quote/{symbol}:
+ *   get:
+ *     tags:
+ *       - Market Data
+ *     summary: Get real-time stock quote
+ *     description: Retrieve real-time price and market data for a stock symbol
+ *     parameters:
+ *       - name: symbol
+ *         in: path
+ *         required: true
+ *         description: Stock symbol (e.g., AAPL, GOOGL)
+ *         schema:
+ *           type: string
+ *           example: AAPL
+ *     responses:
+ *       200:
+ *         description: Quote data retrieved successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 data:
+ *                   type: object
+ *                   properties:
+ *                     symbol:
+ *                       type: string
+ *                     current:
+ *                       type: number
+ *                     change:
+ *                       type: number
+ *                     percentChange:
+ *                       type: number
+ *                     high:
+ *                       type: number
+ *                     low:
+ *                       type: number
+ *                     open:
+ *                       type: number
+ *                     previousClose:
+ *                       type: number
+ *                     timestamp:
+ *                       type: integer
+ *       500:
+ *         description: Failed to fetch market data
+ */
 export const getQuote = async (req, res, next) => {
   try {
     const { symbol } = req.params;
@@ -31,7 +78,42 @@ export const getQuote = async (req, res, next) => {
   }
 };
 
-// Get candlestick data
+/**
+ * @swagger
+ * /market/candles/{symbol}:
+ *   get:
+ *     tags:
+ *       - Market Data
+ *     summary: Get candlestick chart data
+ *     description: Retrieve historical candlestick data for technical analysis
+ *     parameters:
+ *       - name: symbol
+ *         in: path
+ *         required: true
+ *         description: Stock symbol
+ *         schema:
+ *           type: string
+ *       - name: resolution
+ *         in: query
+ *         description: Time resolution (1, 5, 15, 30, 60, D, W, M)
+ *         schema:
+ *           type: string
+ *           default: D
+ *           enum: ['1', '5', '15', '30', '60', 'D', 'W', 'M']
+ *       - name: from
+ *         in: query
+ *         description: Start timestamp (Unix)
+ *         schema:
+ *           type: integer
+ *       - name: to
+ *         in: query
+ *         description: End timestamp (Unix)
+ *         schema:
+ *           type: integer
+ *     responses:
+ *       200:
+ *         description: Candlestick data retrieved successfully
+ */
 export const getCandles = async (req, res, next) => {
   try {
     const { symbol } = req.params;

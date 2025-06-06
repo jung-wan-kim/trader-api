@@ -7,6 +7,7 @@ import morgan from 'morgan';
 import { errorHandler } from './middleware/errorHandler.js';
 import { rateLimiter } from './middleware/rateLimiter.js';
 import logger from './utils/logger.ts';
+import { swaggerUi, swaggerSpec, swaggerUiOptions } from './config/swagger.js';
 
 // Import routes
 import authRoutes from './routes/auth.js';
@@ -29,6 +30,16 @@ app.use(morgan('combined', { stream: logger.stream }));
 
 // Rate limiting
 app.use('/api/', rateLimiter);
+
+// API Documentation
+app.use('/docs', swaggerUi.serve);
+app.get('/docs', swaggerUi.setup(swaggerSpec, swaggerUiOptions));
+
+// API specification endpoint
+app.get('/api-docs', (req, res) => {
+  res.setHeader('Content-Type', 'application/json');
+  res.send(swaggerSpec);
+});
 
 // Health check
 app.get('/health', (req, res) => {

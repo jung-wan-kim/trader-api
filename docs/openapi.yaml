@@ -1,0 +1,844 @@
+openapi: 3.0.3
+info:
+  title: Trader API
+  description: |
+    AI-powered stock recommendation service backend API
+    
+    This API provides comprehensive trading recommendation services, market data, 
+    portfolio management, and user authentication features.
+    
+    ## Features
+    - User authentication and profile management
+    - Real-time stock market data integration via Finnhub API
+    - AI-powered trading recommendations with multiple strategies
+    - Portfolio tracking and performance analytics
+    - Subscription-based access tiers
+    - Advanced trading strategies (Momentum, Reversal, Swing Trading, etc.)
+    
+    ## Authentication
+    This API uses JWT token-based authentication. Include the token in the Authorization header:
+    ```
+    Authorization: Bearer <your-jwt-token>
+    ```
+    
+    ## Rate Limiting
+    - Authentication endpoints: 5 requests per minute
+    - General API endpoints: 100 requests per minute
+    - Market data endpoints: 200 requests per minute
+    
+    ## Subscription Tiers
+    - **Basic**: 3 recommendations per day, Jesse Livermore strategy only
+    - **Premium**: 50 recommendations per day, access to multiple strategies
+    - **Professional**: Unlimited recommendations, all strategies, advanced analytics
+    
+  version: 1.0.0
+  contact:
+    name: Trader API Team
+    email: support@trader-api.com
+  license:
+    name: MIT
+    url: https://opensource.org/licenses/MIT
+
+servers:
+  - url: http://localhost:3000/api/v1
+    description: Development server
+  - url: https://api.trader-app.com/api/v1
+    description: Production server
+
+tags:
+  - name: Authentication
+    description: User authentication and account management
+  - name: Market Data
+    description: Real-time stock market data and analysis
+  - name: Recommendations
+    description: AI-powered trading recommendations
+  - name: Portfolio
+    description: Portfolio management and tracking
+  - name: Strategies
+    description: Trading strategies and subscriptions
+  - name: Subscription
+    description: Subscription management and billing
+  - name: Health
+    description: API health and status checks
+
+paths:
+  /health:
+    get:
+      tags:
+        - Health
+      summary: Health check endpoint
+      description: Returns the health status of the API service
+      responses:
+        '200':
+          description: Service is healthy
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: ok
+                  timestamp:
+                    type: string
+                    format: date-time
+                  uptime:
+                    type: number
+                    description: Service uptime in seconds
+                  environment:
+                    type: string
+                    example: production
+
+  # Authentication Endpoints
+  /auth/register:
+    post:
+      tags:
+        - Authentication
+      summary: Register new user
+      description: Create a new user account with email and password
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - email
+                - password
+                - name
+                - investmentStyle
+              properties:
+                email:
+                  type: string
+                  format: email
+                  example: user@example.com
+                password:
+                  type: string
+                  minLength: 8
+                  example: securePassword123
+                name:
+                  type: string
+                  example: John Doe
+                investmentStyle:
+                  type: string
+                  enum: [conservative, moderate, aggressive]
+                  example: moderate
+      responses:
+        '201':
+          description: User registered successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthResponse'
+        '400':
+          description: Invalid input or user already exists
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /auth/login:
+    post:
+      tags:
+        - Authentication
+      summary: User login
+      description: Authenticate user with email and password
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - email
+                - password
+              properties:
+                email:
+                  type: string
+                  format: email
+                password:
+                  type: string
+      responses:
+        '200':
+          description: Login successful
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthResponse'
+        '401':
+          description: Invalid credentials
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /auth/refresh:
+    post:
+      tags:
+        - Authentication
+      summary: Refresh access token
+      description: Refresh the JWT access token using refresh token
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - refresh_token
+              properties:
+                refresh_token:
+                  type: string
+      responses:
+        '200':
+          description: Token refreshed successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TokenResponse'
+        '401':
+          description: Invalid refresh token
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /auth/logout:
+    post:
+      tags:
+        - Authentication
+      summary: User logout
+      description: Logout user and invalidate session
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Logout successful
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: Logout successful
+
+  /auth/profile:
+    get:
+      tags:
+        - Authentication
+      summary: Get user profile
+      description: Retrieve current user's profile information
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Profile retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  profile:
+                    $ref: '#/components/schemas/UserProfile'
+        '404':
+          description: Profile not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+    put:
+      tags:
+        - Authentication
+      summary: Update user profile
+      description: Update user profile information
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                name:
+                  type: string
+                investment_style:
+                  type: string
+                  enum: [conservative, moderate, aggressive]
+                risk_tolerance:
+                  type: number
+                  minimum: 1
+                  maximum: 10
+                notification_preferences:
+                  type: object
+                  properties:
+                    email_recommendations:
+                      type: boolean
+                    push_notifications:
+                      type: boolean
+                    sms_alerts:
+                      type: boolean
+      responses:
+        '200':
+          description: Profile updated successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                  profile:
+                    $ref: '#/components/schemas/UserProfile'
+
+  # Market Data Endpoints
+  /market/quote/{symbol}:
+    get:
+      tags:
+        - Market Data
+      summary: Get real-time stock quote
+      description: Retrieve real-time price and market data for a stock symbol
+      parameters:
+        - name: symbol
+          in: path
+          required: true
+          description: Stock symbol (e.g., AAPL, GOOGL)
+          schema:
+            type: string
+            example: AAPL
+      responses:
+        '200':
+          description: Quote data retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    $ref: '#/components/schemas/StockQuote'
+        '500':
+          description: Failed to fetch market data
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /market/candles/{symbol}:
+    get:
+      tags:
+        - Market Data
+      summary: Get candlestick chart data
+      description: Retrieve historical candlestick data for technical analysis
+      parameters:
+        - name: symbol
+          in: path
+          required: true
+          description: Stock symbol
+          schema:
+            type: string
+        - name: resolution
+          in: query
+          description: Time resolution (1, 5, 15, 30, 60, D, W, M)
+          schema:
+            type: string
+            default: D
+            enum: ['1', '5', '15', '30', '60', 'D', 'W', 'M']
+        - name: from
+          in: query
+          description: Start timestamp (Unix)
+          schema:
+            type: integer
+        - name: to
+          in: query
+          description: End timestamp (Unix)
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Candlestick data retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    $ref: '#/components/schemas/CandlestickData'
+
+  # Recommendations Endpoints
+  /recommendations:
+    get:
+      tags:
+        - Recommendations
+      summary: Get trading recommendations
+      description: Retrieve AI-generated trading recommendations based on user's subscription and preferences
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: strategy_id
+          in: query
+          description: Filter by specific strategy
+          schema:
+            type: string
+        - name: action
+          in: query
+          description: Filter by recommendation action
+          schema:
+            type: string
+            enum: [buy, sell, hold]
+        - name: risk_level
+          in: query
+          description: Filter by risk level
+          schema:
+            type: string
+            enum: [low, medium, high]
+        - name: confidence_min
+          in: query
+          description: Minimum confidence score (0-100)
+          schema:
+            type: number
+            minimum: 0
+            maximum: 100
+        - name: limit
+          in: query
+          description: Number of recommendations to return
+          schema:
+            type: integer
+            default: 20
+            minimum: 1
+            maximum: 100
+        - name: offset
+          in: query
+          description: Number of recommendations to skip
+          schema:
+            type: integer
+            default: 0
+            minimum: 0
+      responses:
+        '200':
+          description: Recommendations retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Recommendation'
+                  pagination:
+                    $ref: '#/components/schemas/Pagination'
+
+  /recommendations/{id}:
+    get:
+      tags:
+        - Recommendations
+      summary: Get recommendation details
+      description: Retrieve detailed information about a specific recommendation
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: Recommendation ID
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Recommendation details retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    $ref: '#/components/schemas/RecommendationDetail'
+
+  # Portfolio Endpoints
+  /portfolio:
+    get:
+      tags:
+        - Portfolio
+      summary: Get user portfolios
+      description: Retrieve all portfolios for the authenticated user
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Portfolios retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Portfolio'
+
+  /portfolio/{id}/positions:
+    get:
+      tags:
+        - Portfolio
+      summary: Get portfolio positions
+      description: Retrieve all positions within a specific portfolio
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: Portfolio ID
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Positions retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Position'
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  schemas:
+    Error:
+      type: object
+      properties:
+        error:
+          type: string
+          description: Error type
+        message:
+          type: string
+          description: Human-readable error message
+        code:
+          type: string
+          description: Error code for programmatic handling
+
+    AuthResponse:
+      type: object
+      properties:
+        message:
+          type: string
+          example: Registration successful
+        user:
+          $ref: '#/components/schemas/User'
+        session:
+          $ref: '#/components/schemas/Session'
+
+    TokenResponse:
+      type: object
+      properties:
+        message:
+          type: string
+          example: Token refreshed successfully
+        session:
+          $ref: '#/components/schemas/Session'
+
+    User:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        email:
+          type: string
+          format: email
+        name:
+          type: string
+        investment_style:
+          type: string
+          enum: [conservative, moderate, aggressive]
+
+    Session:
+      type: object
+      properties:
+        access_token:
+          type: string
+        refresh_token:
+          type: string
+        expires_in:
+          type: integer
+        token_type:
+          type: string
+          example: Bearer
+
+    UserProfile:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        email:
+          type: string
+          format: email
+        name:
+          type: string
+        investment_style:
+          type: string
+          enum: [conservative, moderate, aggressive]
+        risk_tolerance:
+          type: number
+          minimum: 1
+          maximum: 10
+        subscription_tier:
+          type: string
+          enum: [basic, premium, professional]
+        notification_preferences:
+          type: object
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+
+    StockQuote:
+      type: object
+      properties:
+        symbol:
+          type: string
+          example: AAPL
+        current:
+          type: number
+          description: Current price
+          example: 150.25
+        change:
+          type: number
+          description: Price change from previous close
+          example: 2.15
+        percentChange:
+          type: number
+          description: Percentage change from previous close
+          example: 1.45
+        high:
+          type: number
+          description: Day's high price
+          example: 152.30
+        low:
+          type: number
+          description: Day's low price
+          example: 148.90
+        open:
+          type: number
+          description: Opening price
+          example: 149.50
+        previousClose:
+          type: number
+          description: Previous day's closing price
+          example: 148.10
+        timestamp:
+          type: integer
+          description: Last update timestamp (Unix)
+
+    CandlestickData:
+      type: object
+      properties:
+        o:
+          type: array
+          items:
+            type: number
+          description: Open prices
+        h:
+          type: array
+          items:
+            type: number
+          description: High prices
+        l:
+          type: array
+          items:
+            type: number
+          description: Low prices
+        c:
+          type: array
+          items:
+            type: number
+          description: Close prices
+        v:
+          type: array
+          items:
+            type: number
+          description: Volume data
+        t:
+          type: array
+          items:
+            type: integer
+          description: Timestamp data
+        s:
+          type: string
+          description: Status (ok/no_data)
+
+    Recommendation:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        symbol:
+          type: string
+          example: AAPL
+        action:
+          type: string
+          enum: [buy, sell, hold]
+        confidence:
+          type: number
+          minimum: 0
+          maximum: 100
+          description: Confidence score (0-100)
+        target_price:
+          type: number
+          description: Target price for the recommendation
+        stop_loss:
+          type: number
+          description: Suggested stop loss price
+        risk_level:
+          type: string
+          enum: [low, medium, high]
+        time_horizon:
+          type: string
+          enum: [short, medium, long]
+        reasoning:
+          type: string
+          description: AI-generated explanation for the recommendation
+        strategy:
+          $ref: '#/components/schemas/Strategy'
+        created_at:
+          type: string
+          format: date-time
+        expires_at:
+          type: string
+          format: date-time
+
+    RecommendationDetail:
+      allOf:
+        - $ref: '#/components/schemas/Recommendation'
+        - type: object
+          properties:
+            market_data:
+              type: object
+              description: Current market data for the symbol
+            technical_indicators:
+              type: object
+              description: Technical analysis indicators
+            fundamental_data:
+              type: object
+              description: Fundamental analysis data
+            historical_performance:
+              type: array
+              items:
+                type: object
+              description: Historical performance of similar recommendations
+
+    Strategy:
+      type: object
+      properties:
+        id:
+          type: string
+          example: jesse-livermore
+        name:
+          type: string
+          example: Jesse Livermore Strategy
+        type:
+          type: string
+          enum: [momentum, reversal, swing, scalping, long_term]
+        description:
+          type: string
+        subscription_required:
+          type: string
+          enum: [basic, premium, professional]
+
+    Portfolio:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+          example: Main Portfolio
+        initial_capital:
+          type: number
+          example: 10000
+        current_value:
+          type: number
+          example: 12500
+        cash_balance:
+          type: number
+          example: 2500
+        total_profit_loss:
+          type: number
+          example: 2500
+        total_profit_loss_percentage:
+          type: number
+          example: 25.0
+        positions:
+          type: array
+          items:
+            $ref: '#/components/schemas/Position'
+        created_at:
+          type: string
+          format: date-time
+
+    Position:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        symbol:
+          type: string
+          example: AAPL
+        quantity:
+          type: number
+          example: 100
+        entry_price:
+          type: number
+          example: 145.50
+        current_price:
+          type: number
+          example: 150.25
+        unrealized_pl:
+          type: number
+          example: 475.00
+        unrealized_pl_percent:
+          type: number
+          example: 3.26
+        status:
+          type: string
+          enum: [open, closed]
+        entry_date:
+          type: string
+          format: date-time
+        exit_date:
+          type: string
+          format: date-time
+          nullable: true
+
+    Pagination:
+      type: object
+      properties:
+        total:
+          type: integer
+          description: Total number of items
+        limit:
+          type: integer
+          description: Number of items per page
+        offset:
+          type: integer
+          description: Number of items skipped
+        has_more:
+          type: boolean
+          description: Whether there are more items available

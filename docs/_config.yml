@@ -1,0 +1,99 @@
+# GitHub Pages Configuration
+title: Trader API Documentation
+description: AI-powered stock recommendation service backend API
+author: Trader API Team
+email: dev-team@trader-api.com
+
+# Build settings
+markdown: kramdown
+highlighter: rouge
+theme: minima
+
+# Repository
+repository: your-organization/trader-api
+github_username: your-organization
+
+# Social links
+social_links:
+  github: your-organization
+  linkedin: trader-api
+  twitter: trader_api
+
+# Navigation
+header_pages:
+  - USER_MANUAL.md
+  - DEVELOPER_GUIDE.md
+  - ARCHITECTURE.md
+  - en/USER_MANUAL_EN.md
+
+# Plugins
+plugins:
+  - jekyll-feed
+  - jekyll-sitemap
+  - jekyll-seo-tag
+
+# Exclude from processing
+exclude:
+  - node_modules/
+  - vendor/
+  - Gemfile
+  - Gemfile.lock
+  - .gitignore
+  - README.md
+
+# Include files
+include:
+  - _pages
+
+# Permalink style
+permalink: /:categories/:title/
+
+# Timezone
+timezone: Asia/Seoul
+
+# Language
+lang: ko-KR
+
+# SEO
+seo:
+  type: WebSite
+  name: Trader API Documentation
+  links:
+    - https://api.trader-app.com
+    - https://docs.trader-app.com
+
+# Google Analytics (optional)
+# google_analytics: G-XXXXXXXXXX
+
+# Collections
+collections:
+  guides:
+    output: true
+    permalink: /:collection/:name/
+  api:
+    output: true
+    permalink: /:collection/:name/
+
+# Defaults
+defaults:
+  - scope:
+      path: ""
+      type: "posts"
+    values:
+      layout: "post"
+      author: "Trader API Team"
+  - scope:
+      path: ""
+      type: "guides"
+    values:
+      layout: "page"
+  - scope:
+      path: ""
+      type: "api"
+    values:
+      layout: "page"
+
+# Custom variables
+api_version: "1.0.0"
+api_base_url: "https://api.trader-app.com/api/v1"
+support_email: "support@trader-api.com"

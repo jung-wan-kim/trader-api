@@ -2,7 +2,84 @@ import { supabase, supabaseAdmin } from '../config/supabase.js';
 import { validationResult } from 'express-validator';
 import logger from '../utils/logger.ts';
 
-// Register new user
+/**
+ * @swagger
+ * /auth/register:
+ *   post:
+ *     tags:
+ *       - Authentication
+ *     summary: Register new user
+ *     description: Create a new user account with email, password, and profile information
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - email
+ *               - password
+ *               - name
+ *               - investmentStyle
+ *             properties:
+ *               email:
+ *                 type: string
+ *                 format: email
+ *                 example: user@example.com
+ *               password:
+ *                 type: string
+ *                 minLength: 8
+ *                 example: securePassword123
+ *               name:
+ *                 type: string
+ *                 example: John Doe
+ *               investmentStyle:
+ *                 type: string
+ *                 enum: [conservative, moderate, aggressive]
+ *                 example: moderate
+ *     responses:
+ *       201:
+ *         description: User registered successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: Registration successful
+ *                 user:
+ *                   type: object
+ *                   properties:
+ *                     id:
+ *                       type: string
+ *                       format: uuid
+ *                     email:
+ *                       type: string
+ *                       format: email
+ *                     name:
+ *                       type: string
+ *                     investment_style:
+ *                       type: string
+ *                 session:
+ *                   type: object
+ *                   properties:
+ *                     access_token:
+ *                       type: string
+ *                     refresh_token:
+ *                       type: string
+ *       400:
+ *         description: Invalid input or user already exists
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 error:
+ *                   type: string
+ *                 message:
+ *                   type: string
+ */
 export const register = async (req, res, next) => {
   try {
     // Check validation errors
@@ -84,7 +161,35 @@ export const register = async (req, res, next) => {
   }
 };
 
-// Login user
+/**
+ * @swagger
+ * /auth/login:
+ *   post:
+ *     tags:
+ *       - Authentication
+ *     summary: User login
+ *     description: Authenticate user with email and password
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - email
+ *               - password
+ *             properties:
+ *               email:
+ *                 type: string
+ *                 format: email
+ *               password:
+ *                 type: string
+ *     responses:
+ *       200:
+ *         description: Login successful
+ *       401:
+ *         description: Invalid credentials
+ */
 export const login = async (req, res, next) => {
   try {
     const errors = validationResult(req);
@@ -185,7 +290,22 @@ export const logout = async (req, res, next) => {
   }
 };
 
-// Get user profile
+/**
+ * @swagger
+ * /auth/profile:
+ *   get:
+ *     tags:
+ *       - Authentication
+ *     summary: Get user profile
+ *     description: Retrieve current user's profile information
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Profile retrieved successfully
+ *       404:
+ *         description: Profile not found
+ */
 export const getProfile = async (req, res, next) => {
   try {
     const userId = req.user.id;
@@ -229,7 +349,36 @@ export const getProfile = async (req, res, next) => {
   }
 };
 
-// Update user profile
+/**
+ * @swagger
+ * /auth/profile:
+ *   put:
+ *     tags:
+ *       - Authentication
+ *     summary: Update user profile
+ *     description: Update user profile information
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               name:
+ *                 type: string
+ *               investment_style:
+ *                 type: string
+ *                 enum: [conservative, moderate, aggressive]
+ *               risk_tolerance:
+ *                 type: number
+ *                 minimum: 1
+ *                 maximum: 10
+ *     responses:
+ *       200:
+ *         description: Profile updated successfully
+ */
 export const updateProfile = async (req, res, next) => {
   try {
     const errors = validationResult(req);
