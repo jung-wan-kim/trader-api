@@ -121,8 +121,4 @@ const rateLimiter = {
 };
 
 // CommonJS exports
-exports.rateLimiter = rateLimiter;
-
-// 기본 export (하위 호환성)
-module.exports = rateLimiter.default;
-module.exports.rateLimiter = rateLimiter;
+module.exports = rateLimiter;

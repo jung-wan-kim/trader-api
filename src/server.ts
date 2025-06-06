@@ -145,11 +145,11 @@ app.get('/health', async (_req: Request, res: Response) => {
 /**
  * API 라우트
  */
-app.use('/api/v1/auth', authRoutes);
-app.use('/api/v1/market', rateLimiter.standard, marketRoutes);
-app.use('/api/v1/portfolio', rateLimiter.standard, portfolioRoutes);
-app.use('/api/v1/recommendations', rateLimiter.standard, recommendationRoutes);
-app.use('/api/v1/strategies', rateLimiter.standard, strategyRoutes);
+app.use('/api/v1/auth', authRoutes.default || authRoutes);
+// app.use('/api/v1/market', rateLimiter.standard, marketRoutes.default || marketRoutes);
+// app.use('/api/v1/portfolio', rateLimiter.standard, portfolioRoutes.default || portfolioRoutes);
+// app.use('/api/v1/recommendations', rateLimiter.standard, recommendationRoutes.default || recommendationRoutes);
+// app.use('/api/v1/strategies', rateLimiter.standard, strategyRoutes.default || strategyRoutes);
 
 /**
  * API 문서 (개발 환경에서만)
