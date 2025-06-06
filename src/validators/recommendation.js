@@ -1,28 +1,67 @@
-const Joi = require('joi');
+import { query, body } from 'express-validator';
 
-const validateRecommendationQuery = (req, res, next) => {
-  const schema = Joi.object({
-    action: Joi.string().valid('BUY', 'SELL', 'HOLD').optional(),
-    riskLevel: Joi.string().valid('LOW', 'MEDIUM', 'HIGH').optional(),
-    timeframe: Joi.string().valid('SHORT', 'MEDIUM', 'LONG').optional(),
-    sortBy: Joi.string().valid('created_at', 'confidence', 'likes_count').optional(),
-    order: Joi.string().valid('asc', 'desc').optional(),
-    limit: Joi.number().integer().min(1).max(100).optional(),
-    offset: Joi.number().integer().min(0).optional()
-  });
+export const validateRecommendationQuery = [
+  query('strategy_id')
+    .optional()
+    .isIn(['jesse-livermore', 'larry-williams', 'stan-weinstein'])
+    .withMessage('Invalid strategy ID'),
+  query('action')
+    .optional()
+    .isIn(['BUY', 'SELL', 'HOLD'])
+    .withMessage('Invalid action'),
+  query('risk_level')
+    .optional()
+    .isIn(['low', 'medium', 'high'])
+    .withMessage('Invalid risk level'),
+  query('confidence_min')
+    .optional()
+    .isFloat({ min: 0, max: 100 })
+    .withMessage('Confidence must be between 0 and 100'),
+  query('sortBy')
+    .optional()
+    .isIn(['created_at', 'confidence', 'expected_return', 'risk_reward_ratio'])
+    .withMessage('Invalid sort field'),
+  query('order')
+    .optional()
+    .isIn(['asc', 'desc'])
+    .withMessage('Invalid sort order'),
+  query('limit')
+    .optional()
+    .isInt({ min: 1, max: 100 })
+    .toInt()
+    .withMessage('Limit must be between 1 and 100'),
+  query('offset')
+    .optional()
+    .isInt({ min: 0 })
+    .toInt()
+    .withMessage('Offset must be a positive integer')
+];
 
-  const { error } = schema.validate(req.query);
-  
-  if (error) {
-    return res.status(400).json({
-      error: 'Validation Error',
-      message: error.details[0].message
-    });
-  }
-
-  next();
-};
-
-module.exports = {
-  validateRecommendationQuery
-};
+export const validateFollowRecommendation = [
+  body('portfolio_id')
+    .notEmpty()
+    .isUUID()
+    .withMessage('Valid portfolio ID is required'),
+  body('quantity')
+    .notEmpty()
+    .isFloat({ min: 0.0001 })
+    .withMessage('Quantity must be a positive number'),
+  body('entry_price')
+    .optional()
+    .isFloat({ min: 0.01 })
+    .withMessage('Entry price must be a positive number'),
+  body('custom_stop_loss')
+    .optional()
+    .isFloat({ min: 0.01 })
+    .withMessage('Stop loss must be a positive number'),
+  body('custom_take_profit')
+    .optional()
+    .isFloat({ min: 0.01 })
+    .withMessage('Take profit must be a positive number')
+    .custom((value, { req }) => {
+      if (req.body.entry_price && value <= req.body.entry_price) {
+        throw new Error('Take profit must be higher than entry price for long positions');
+      }
+      return true;
+    })
+];

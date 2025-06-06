@@ -1,19 +1,20 @@
-require('dotenv').config();
-const express = require('express');
-const cors = require('cors');
-const helmet = require('helmet');
-const compression = require('compression');
-const morgan = require('morgan');
-const { errorHandler } = require('./middleware/errorHandler');
-const { rateLimiter } = require('./middleware/rateLimiter');
-const logger = require('./utils/logger');
+import 'dotenv/config';
+import express from 'express';
+import cors from 'cors';
+import helmet from 'helmet';
+import compression from 'compression';
+import morgan from 'morgan';
+import { errorHandler } from './middleware/errorHandler.js';
+import { rateLimiter } from './middleware/rateLimiter.js';
+import logger from './utils/logger.js';
 
 // Import routes
-const authRoutes = require('./routes/auth');
-const recommendationRoutes = require('./routes/recommendations');
-const marketRoutes = require('./routes/market');
-const portfolioRoutes = require('./routes/portfolio');
-const strategyRoutes = require('./routes/strategies');
+import authRoutes from './routes/auth.js';
+import recommendationRoutes from './routes/recommendations.js';
+import marketRoutes from './routes/market.js';
+import portfolioRoutes from './routes/portfolio.js';
+import strategyRoutes from './routes/strategies.js';
+import subscriptionRoutes from './routes/subscription.js';
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -45,6 +46,7 @@ app.use('/api/recommendations', recommendationRoutes);
 app.use('/api/market', marketRoutes);
 app.use('/api/portfolio', portfolioRoutes);
 app.use('/api/strategies', strategyRoutes);
+app.use('/api/subscription', subscriptionRoutes);
 
 // 404 handler
 app.use((req, res) => {
@@ -61,3 +63,5 @@ app.use(errorHandler);
 app.listen(PORT, () => {
   logger.info(`Server is running on port ${PORT} in ${process.env.NODE_ENV} mode`);
 });
+
+export default app;

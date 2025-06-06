@@ -1,119 +1,180 @@
-const { supabase } = require('../config/database');
-const logger = require('../utils/logger');
+import { supabaseAdmin } from '../config/supabase.js';
+import logger from '../utils/logger.js';
 
-const getStrategies = async (req, res, next) => {
+// Strategy definitions for legendary traders
+const LEGENDARY_STRATEGIES = {
+  'jesse-livermore': {
+    id: 'jesse-livermore',
+    name: 'Jesse Livermore - Trend Following & Pyramiding',
+    description: 'Follow the trend with pyramiding on winners. Cut losses quickly and let profits run.',
+    trader: 'Jesse Livermore',
+    type: 'trend_following',
+    indicators: ['price_momentum', 'volume_analysis', 'pivot_points'],
+    risk_level: 'high',
+    time_frame: 'medium_term',
+    key_rules: [
+      'Buy on new highs with increasing volume',
+      'Pyramid into winning positions',
+      'Cut losses at -3% to -5%',
+      'Never risk more than 10% on a single position'
+    ]
+  },
+  'larry-williams': {
+    id: 'larry-williams',
+    name: 'Larry Williams - Short-term Momentum',
+    description: 'Volatility breakout with same-day exits. High frequency trading with strict risk management.',
+    trader: 'Larry Williams',
+    type: 'momentum',
+    indicators: ['williams_r', 'volatility_breakout', 'market_timing'],
+    risk_level: 'medium',
+    time_frame: 'short_term',
+    key_rules: [
+      'Enter on 0.5x previous day range breakout',
+      'Exit by end of day',
+      'Use overbought/oversold levels',
+      'Daily max loss limit of 2%'
+    ]
+  },
+  'stan-weinstein': {
+    id: 'stan-weinstein',
+    name: 'Stan Weinstein - Stage Analysis',
+    description: 'Long-term investing based on stage analysis. Buy in Stage 2, sell in Stage 4.',
+    trader: 'Stan Weinstein',
+    type: 'stage_analysis',
+    indicators: ['30_week_ma', 'relative_strength', 'volume_patterns'],
+    risk_level: 'low',
+    time_frame: 'long_term',
+    key_rules: [
+      'Buy when breaking above 30-week MA',
+      'Hold during Stage 2 uptrend',
+      'Sell when entering Stage 4 decline',
+      'Stop loss below 30-week MA'
+    ]
+  }
+};
+
+// Get all strategies
+export const getStrategies = async (req, res, next) => {
   try {
     const { 
-      tradingStyle, 
-      riskLevel,
-      minWinRate,
-      sortBy = 'followers_count',
-      order = 'desc',
-      limit = 20,
-      offset = 0
+      type,
+      risk_level,
+      time_frame,
+      subscription_tier
     } = req.query;
 
-    let query = supabase
-      .from('strategies')
-      .select(`
-        *,
-        trader:traders(id, name, rating, followers_count)
-      `, { count: 'exact' })
-      .eq('is_active', true);
+    const userTier = req.user?.subscription_tier || 'basic';
+
+    // Filter strategies based on user's subscription
+    let availableStrategies = Object.values(LEGENDARY_STRATEGIES);
+    
+    if (userTier === 'basic') {
+      // Basic users only get Jesse Livermore strategy
+      availableStrategies = availableStrategies.filter(s => s.id === 'jesse-livermore');
+    }
 
     // Apply filters
-    if (tradingStyle) query = query.eq('trading_style', tradingStyle);
-    if (riskLevel) query = query.eq('risk_level', riskLevel);
-    if (minWinRate) query = query.gte('win_rate', minWinRate);
+    if (type) {
+      availableStrategies = availableStrategies.filter(s => s.type === type);
+    }
+    if (risk_level) {
+      availableStrategies = availableStrategies.filter(s => s.risk_level === risk_level);
+    }
+    if (time_frame) {
+      availableStrategies = availableStrategies.filter(s => s.time_frame === time_frame);
+    }
 
-    // Apply sorting
-    const validSortFields = ['followers_count', 'win_rate', 'sharpe_ratio', 'created_at'];
-    const sortField = validSortFields.includes(sortBy) ? sortBy : 'followers_count';
-    query = query.order(sortField, { ascending: order === 'asc' });
+    // Get performance data from database
+    const strategyIds = availableStrategies.map(s => s.id);
+    const { data: performanceData, error } = await supabaseAdmin
+      .from('strategy_performance')
+      .select('*')
+      .in('strategy_id', strategyIds);
 
-    // Apply pagination
-    query = query.range(offset, offset + limit - 1);
+    if (error) {
+      logger.error('Error fetching strategy performance:', error);
+    }
 
-    const { data: strategies, error, count } = await query;
-
-    if (error) throw error;
+    // Merge performance data with strategy definitions
+    const strategiesWithPerformance = availableStrategies.map(strategy => {
+      const performance = performanceData?.find(p => p.strategy_id === strategy.id) || {};
+      return {
+        ...strategy,
+        performance: {
+          win_rate: performance.win_rate || 0,
+          average_return: performance.average_return || 0,
+          sharpe_ratio: performance.sharpe_ratio || 0,
+          max_drawdown: performance.max_drawdown || 0,
+          total_trades: performance.total_trades || 0,
+          subscribers_count: performance.subscribers_count || 0
+        }
+      };
+    });
 
     res.json({
-      data: strategies,
-      pagination: {
-        total: count,
-        limit,
-        offset,
-        hasMore: offset + limit < count
-      }
+      data: strategiesWithPerformance,
+      count: strategiesWithPerformance.length
     });
   } catch (error) {
     next(error);
   }
 };
 
-const getStrategyById = async (req, res, next) => {
+// Get strategy by ID
+export const getStrategyById = async (req, res, next) => {
   try {
     const { id } = req.params;
+    const userTier = req.user?.subscription_tier || 'basic';
 
-    const { data: strategy, error } = await supabase
-      .from('strategies')
-      .select(`
-        *,
-        trader:traders(id, name, bio, rating, followers_count, verified)
-      `)
-      .eq('id', id)
-      .single();
+    const strategy = LEGENDARY_STRATEGIES[id];
 
-    if (error || !strategy) {
+    if (!strategy) {
       return res.status(404).json({
         error: 'Not Found',
         message: 'Strategy not found'
       });
     }
 
-    // Get recent performance
+    // Check access based on subscription
+    if (userTier === 'basic' && id !== 'jesse-livermore') {
+      return res.status(403).json({
+        error: 'Forbidden',
+        message: 'Upgrade to Premium or Professional to access this strategy'
+      });
+    }
+
+    // Get detailed performance data
+    const { data: performance, error: perfError } = await supabaseAdmin
+      .from('strategy_performance')
+      .select('*')
+      .eq('strategy_id', id)
+      .single();
+
+    if (perfError) {
+      logger.error('Error fetching strategy performance:', perfError);
+    }
+
+    // Get recent recommendations
     const thirtyDaysAgo = new Date();
     thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
 
-    const { data: recentRecommendations } = await supabase
+    const { data: recentRecommendations, error: recError } = await supabaseAdmin
       .from('recommendations')
-      .select('id, created_at, action, confidence')
+      .select('*')
       .eq('strategy_id', id)
       .gte('created_at', thirtyDaysAgo.toISOString())
       .order('created_at', { ascending: false })
       .limit(10);
 
-    strategy.recent_recommendations = recentRecommendations || [];
-
-    res.json({ data: strategy });
-  } catch (error) {
-    next(error);
-  }
-};
-
-const getStrategiesByTrader = async (req, res, next) => {
-  try {
-    const { traderId } = req.params;
-    const { limit = 10, offset = 0 } = req.query;
-
-    const { data: strategies, error, count } = await supabase
-      .from('strategies')
-      .select('*', { count: 'exact' })
-      .eq('trader_id', traderId)
-      .eq('is_active', true)
-      .order('followers_count', { ascending: false })
-      .range(offset, offset + limit - 1);
-
-    if (error) throw error;
+    if (recError) {
+      logger.error('Error fetching recommendations:', recError);
+    }
 
     res.json({
-      data: strategies,
-      pagination: {
-        total: count,
-        limit,
-        offset,
-        hasMore: offset + limit < count
+      data: {
+        ...strategy,
+        performance: performance || {},
+        recent_recommendations: recentRecommendations || []
       }
     });
   } catch (error) {
@@ -121,27 +182,32 @@ const getStrategiesByTrader = async (req, res, next) => {
   }
 };
 
-const subscribeToStrategy = async (req, res, next) => {
+// Subscribe to strategy
+export const subscribeToStrategy = async (req, res, next) => {
   try {
     const { id } = req.params;
     const userId = req.user.id;
+    const userTier = req.user.subscription_tier || 'basic';
 
-    // Check if strategy exists
-    const { data: strategy, error: stratError } = await supabase
-      .from('strategies')
-      .select('id, name')
-      .eq('id', id)
-      .single();
+    const strategy = LEGENDARY_STRATEGIES[id];
 
-    if (stratError || !strategy) {
+    if (!strategy) {
       return res.status(404).json({
         error: 'Not Found',
         message: 'Strategy not found'
       });
     }
 
+    // Check access based on subscription
+    if (userTier === 'basic' && id !== 'jesse-livermore') {
+      return res.status(403).json({
+        error: 'Forbidden',
+        message: 'Upgrade to Premium or Professional to access this strategy'
+      });
+    }
+
     // Check if already subscribed
-    const { data: existing } = await supabase
+    const { data: existing } = await supabaseAdmin
       .from('user_strategy_subscriptions')
       .select('*')
       .eq('user_id', userId)
@@ -156,35 +222,53 @@ const subscribeToStrategy = async (req, res, next) => {
     }
 
     // Create subscription
-    const { error: subError } = await supabase
+    const { error: subError } = await supabaseAdmin
       .from('user_strategy_subscriptions')
-      .insert([{ user_id: userId, strategy_id: id }]);
+      .insert({
+        user_id: userId,
+        strategy_id: id,
+        subscribed_at: new Date().toISOString()
+      });
 
     if (subError) throw subError;
+
+    // Update subscriber count
+    await supabaseAdmin.rpc('increment_strategy_subscribers', { 
+      strategy_id_param: id 
+    });
 
     logger.info(`User ${userId} subscribed to strategy ${id}`);
 
     res.status(201).json({
       message: 'Successfully subscribed to strategy',
-      data: { strategy_id: id, strategy_name: strategy.name }
+      data: {
+        strategy_id: id,
+        strategy_name: strategy.name
+      }
     });
   } catch (error) {
     next(error);
   }
 };
 
-const unsubscribeFromStrategy = async (req, res, next) => {
+// Unsubscribe from strategy
+export const unsubscribeFromStrategy = async (req, res, next) => {
   try {
     const { id } = req.params;
     const userId = req.user.id;
 
-    const { error } = await supabase
+    const { error } = await supabaseAdmin
       .from('user_strategy_subscriptions')
       .delete()
       .eq('user_id', userId)
       .eq('strategy_id', id);
 
     if (error) throw error;
+
+    // Update subscriber count
+    await supabaseAdmin.rpc('decrement_strategy_subscribers', { 
+      strategy_id_param: id 
+    });
 
     logger.info(`User ${userId} unsubscribed from strategy ${id}`);
 
@@ -196,31 +280,36 @@ const unsubscribeFromStrategy = async (req, res, next) => {
   }
 };
 
-const getStrategyPerformance = async (req, res, next) => {
+// Get strategy performance
+export const getStrategyPerformance = async (req, res, next) => {
   try {
     const { id } = req.params;
     const { period = '1M' } = req.query;
+    const userTier = req.user?.subscription_tier || 'basic';
 
-    // Get strategy
-    const { data: strategy, error: stratError } = await supabase
-      .from('strategies')
-      .select('*')
-      .eq('id', id)
-      .single();
+    const strategy = LEGENDARY_STRATEGIES[id];
 
-    if (stratError || !strategy) {
+    if (!strategy) {
       return res.status(404).json({
         error: 'Not Found',
         message: 'Strategy not found'
       });
     }
 
+    // Check access based on subscription
+    if (userTier === 'basic' && id !== 'jesse-livermore') {
+      return res.status(403).json({
+        error: 'Forbidden',
+        message: 'Upgrade to Premium or Professional to access this strategy'
+      });
+    }
+
     // Get recommendations for the period
     const startDate = getStartDate(period);
     
-    const { data: recommendations, error: recError } = await supabase
+    const { data: recommendations, error: recError } = await supabaseAdmin
       .from('recommendations')
-      .select('id, created_at, action, confidence')
+      .select('*')
       .eq('strategy_id', id)
       .gte('created_at', startDate.toISOString());
 
@@ -229,7 +318,7 @@ const getStrategyPerformance = async (req, res, next) => {
     // Get positions based on these recommendations
     const recommendationIds = recommendations.map(r => r.id);
     
-    const { data: positions, error: posError } = await supabase
+    const { data: positions, error: posError } = await supabaseAdmin
       .from('positions')
       .select('*')
       .in('recommendation_id', recommendationIds);
@@ -245,28 +334,30 @@ const getStrategyPerformance = async (req, res, next) => {
       ? (winningTrades / closedPositions.length * 100)
       : 0;
 
-    // Monthly returns calculation
+    // Calculate returns by month
     const monthlyReturns = calculateMonthlyReturns(closedPositions);
+
+    // Calculate sharpe ratio
+    const sharpeRatio = calculateSharpeRatio(monthlyReturns);
 
     res.json({
       data: {
         strategy_id: id,
+        strategy_name: strategy.name,
         period,
-        overall: {
-          win_rate: strategy.win_rate,
-          average_return: strategy.average_return,
-          sharpe_ratio: strategy.sharpe_ratio,
-          max_drawdown: strategy.max_drawdown,
-          total_trades: strategy.total_trades
-        },
-        period_performance: {
+        performance: {
           total_recommendations: recommendations.length,
           total_positions: positions.length,
           closed_positions: closedPositions.length,
+          open_positions: positions.length - closedPositions.length,
           winning_trades: winningTrades,
           losing_trades: closedPositions.length - winningTrades,
           win_rate: periodWinRate.toFixed(2),
-          total_profit_loss: totalProfitLoss.toFixed(2)
+          total_profit_loss: totalProfitLoss.toFixed(2),
+          average_return: closedPositions.length > 0 
+            ? (totalProfitLoss / closedPositions.length).toFixed(2) 
+            : 0,
+          sharpe_ratio: sharpeRatio
         },
         monthly_returns: monthlyReturns
       }
@@ -276,59 +367,29 @@ const getStrategyPerformance = async (req, res, next) => {
   }
 };
 
-const getStrategyFollowers = async (req, res, next) => {
+// Get user's subscribed strategies
+export const getUserStrategies = async (req, res, next) => {
   try {
-    const { id } = req.params;
-    const { limit = 50, offset = 0 } = req.query;
+    const userId = req.user.id;
 
-    // Get strategy
-    const { data: strategy, error: stratError } = await supabase
-      .from('strategies')
-      .select('id, name, trader_id')
-      .eq('id', id)
-      .single();
-
-    if (stratError || !strategy) {
-      return res.status(404).json({
-        error: 'Not Found',
-        message: 'Strategy not found'
-      });
-    }
-
-    // Get subscribers count
-    const { count: totalFollowers, error: countError } = await supabase
+    const { data: subscriptions, error } = await supabaseAdmin
       .from('user_strategy_subscriptions')
-      .select('*', { count: 'exact', head: true })
-      .eq('strategy_id', id);
+      .select('strategy_id, subscribed_at')
+      .eq('user_id', userId);
 
-    if (countError) throw countError;
+    if (error) throw error;
 
-    // Get recent subscribers
-    const { data: recentSubscribers, error: subError } = await supabase
-      .from('user_strategy_subscriptions')
-      .select(`
-        created_at,
-        user:users(id, name)
-      `)
-      .eq('strategy_id', id)
-      .order('created_at', { ascending: false })
-      .range(offset, offset + limit - 1);
-
-    if (subError) throw subError;
+    const subscribedStrategies = subscriptions.map(sub => {
+      const strategy = LEGENDARY_STRATEGIES[sub.strategy_id];
+      return {
+        ...strategy,
+        subscribed_at: sub.subscribed_at
+      };
+    });
 
     res.json({
-      data: {
-        strategy_id: id,
-        strategy_name: strategy.name,
-        total_followers: totalFollowers,
-        recent_subscribers: recentSubscribers,
-        pagination: {
-          total: totalFollowers,
-          limit,
-          offset,
-          hasMore: offset + limit < totalFollowers
-        }
-      }
+      data: subscribedStrategies,
+      count: subscribedStrategies.length
     });
   } catch (error) {
     next(error);
@@ -361,12 +422,15 @@ function calculateMonthlyReturns(positions) {
           month,
           profit_loss: 0,
           trades: 0,
-          winning_trades: 0
+          winning_trades: 0,
+          investment: 0
         };
       }
       
       monthlyData[month].profit_loss += position.profit_loss;
       monthlyData[month].trades++;
+      monthlyData[month].investment += position.quantity * position.entry_price;
+      
       if (position.profit_loss > 0) {
         monthlyData[month].winning_trades++;
       }
@@ -375,16 +439,35 @@ function calculateMonthlyReturns(positions) {
 
   return Object.values(monthlyData).map(data => ({
     ...data,
-    win_rate: data.trades > 0 ? (data.winning_trades / data.trades * 100).toFixed(2) : 0
+    return_percentage: data.investment > 0 
+      ? ((data.profit_loss / data.investment) * 100).toFixed(2)
+      : 0,
+    win_rate: data.trades > 0 
+      ? (data.winning_trades / data.trades * 100).toFixed(2) 
+      : 0
   }));
 }
 
-module.exports = {
+function calculateSharpeRatio(monthlyReturns) {
+  if (monthlyReturns.length < 2) return 0;
+
+  const returns = monthlyReturns.map(m => parseFloat(m.return_percentage));
+  const avgReturn = returns.reduce((sum, r) => sum + r, 0) / returns.length;
+  
+  const variance = returns.reduce((sum, r) => sum + Math.pow(r - avgReturn, 2), 0) / returns.length;
+  const stdDev = Math.sqrt(variance);
+  
+  // Assuming risk-free rate of 2% annually (0.167% monthly)
+  const riskFreeRate = 0.167;
+  
+  return stdDev > 0 ? ((avgReturn - riskFreeRate) / stdDev).toFixed(2) : 0;
+}
+
+export default {
   getStrategies,
   getStrategyById,
-  getStrategiesByTrader,
   subscribeToStrategy,
   unsubscribeFromStrategy,
   getStrategyPerformance,
-  getStrategyFollowers
+  getUserStrategies
 };

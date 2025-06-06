@@ -1,30 +1,32 @@
-const express = require('express');
+import express from 'express';
+import strategyController from '../controllers/strategyController.js';
+import { authenticate, authorize } from '../middleware/auth.js';
+import { validateStrategyId, validateStrategyQuery, validateBacktestRequest, validatePerformanceQuery } from '../validators/strategy.js';
+
 const router = express.Router();
-const strategyController = require('../controllers/strategyController');
-const { authenticate } = require('../middleware/auth');
 
 // All routes require authentication
 router.use(authenticate);
 
-// Get all trading strategies
-router.get('/', strategyController.getStrategies);
+// Get all trading strategies (filtered by user's subscription)
+router.get('/', validateStrategyQuery, strategyController.getStrategies);
+
+// Get user's subscribed strategies
+router.get('/my-strategies', strategyController.getUserStrategies);
 
 // Get strategy by ID
-router.get('/:id', strategyController.getStrategyById);
-
-// Get strategies by trader
-router.get('/trader/:traderId', strategyController.getStrategiesByTrader);
+router.get('/:id', validateStrategyId, strategyController.getStrategyById);
 
 // Subscribe to strategy
-router.post('/:id/subscribe', strategyController.subscribeToStrategy);
+router.post('/:id/subscribe', validateStrategyId, strategyController.subscribeToStrategy);
 
 // Unsubscribe from strategy
-router.delete('/:id/subscribe', strategyController.unsubscribeFromStrategy);
+router.delete('/:id/subscribe', validateStrategyId, strategyController.unsubscribeFromStrategy);
 
 // Get strategy performance metrics
-router.get('/:id/performance', strategyController.getStrategyPerformance);
+router.get('/:id/performance', validatePerformanceQuery, strategyController.getStrategyPerformance);
 
-// Get strategy followers
-router.get('/:id/followers', strategyController.getStrategyFollowers);
+// Backtest strategy (Premium and Professional only)
+router.post('/:id/backtest', authorize(['premium', 'professional']), validateBacktestRequest, strategyController.backtestStrategy);
 
-module.exports = router;
+export default router;

@@ -1,7 +1,9 @@
-const finnhubService = require('../services/finnhubService');
-const logger = require('../utils/logger');
+import finnhubService from '../services/finnhubService.js';
+import { supabaseAdmin } from '../config/supabase.js';
+import logger from '../utils/logger.js';
 
-const getQuote = async (req, res, next) => {
+// Get real-time quote
+export const getQuote = async (req, res, next) => {
   try {
     const { symbol } = req.params;
     
@@ -29,7 +31,8 @@ const getQuote = async (req, res, next) => {
   }
 };
 
-const getCandles = async (req, res, next) => {
+// Get candlestick data
+export const getCandles = async (req, res, next) => {
   try {
     const { symbol } = req.params;
     const { 
@@ -61,7 +64,8 @@ const getCandles = async (req, res, next) => {
   }
 };
 
-const searchStocks = async (req, res, next) => {
+// Search stocks
+export const searchStocks = async (req, res, next) => {
   try {
     const { q } = req.query;
 
@@ -91,7 +95,8 @@ const searchStocks = async (req, res, next) => {
   }
 };
 
-const getNews = async (req, res, next) => {
+// Get news
+export const getNews = async (req, res, next) => {
   try {
     const { symbol } = req.params;
     const { from, to } = req.query;
@@ -119,7 +124,8 @@ const getNews = async (req, res, next) => {
   }
 };
 
-const getCompanyProfile = async (req, res, next) => {
+// Get company profile
+export const getCompanyProfile = async (req, res, next) => {
   try {
     const { symbol } = req.params;
 
@@ -157,17 +163,27 @@ const getCompanyProfile = async (req, res, next) => {
   }
 };
 
-const getTechnicalIndicators = async (req, res, next) => {
+// Get technical indicators
+export const getTechnicalIndicators = async (req, res, next) => {
   try {
     const { symbol } = req.params;
+    const { period = '1Y' } = req.query;
     
-    // Get current quote for basic calculations
+    // Get current quote
     const quote = await finnhubService.getQuote(symbol.toUpperCase());
     
-    // Get recent candles for moving averages
+    // Calculate time range based on period
     const to = Math.floor(Date.now() / 1000);
-    const from = to - 200 * 24 * 60 * 60; // 200 days
+    let from;
+    switch (period) {
+      case '1M': from = to - 30 * 24 * 60 * 60; break;
+      case '3M': from = to - 90 * 24 * 60 * 60; break;
+      case '6M': from = to - 180 * 24 * 60 * 60; break;
+      case '1Y': from = to - 365 * 24 * 60 * 60; break;
+      default: from = to - 365 * 24 * 60 * 60;
+    }
     
+    // Get daily candles
     const candles = await finnhubService.getCandles(
       symbol.toUpperCase(),
       'D',
@@ -182,30 +198,76 @@ const getTechnicalIndicators = async (req, res, next) => {
       });
     }
 
-    // Calculate simple moving averages
+    // Calculate indicators
     const prices = candles.map(c => c.close);
+    const highs = candles.map(c => c.high);
+    const lows = candles.map(c => c.low);
+    const volumes = candles.map(c => c.volume);
+    
+    // Basic indicators
+    const sma20 = calculateSMA(prices, 20);
     const sma50 = calculateSMA(prices, 50);
     const sma200 = calculateSMA(prices, 200);
+    const ema12 = calculateEMA(prices, 12);
+    const ema26 = calculateEMA(prices, 26);
     
-    // Calculate RSI
+    // RSI
     const rsi = calculateRSI(prices, 14);
     
-    // Determine trend
+    // MACD
+    const macd = ema12 - ema26;
+    const signal = calculateEMA([macd], 9);
+    
+    // Bollinger Bands
+    const bb = calculateBollingerBands(prices, 20, 2);
+    
+    // Williams %R (for Larry Williams strategy)
+    const williamsR = calculateWilliamsR(highs, lows, prices, 14);
+    
+    // Volume analysis
+    const avgVolume = calculateSMA(volumes, 20);
+    const volumeRatio = volumes[volumes.length - 1] / avgVolume;
+    
+    // Pivot points (for Jesse Livermore strategy)
+    const pivotPoints = calculatePivotPoints(
+      candles[candles.length - 1].high,
+      candles[candles.length - 1].low,
+      candles[candles.length - 1].close
+    );
+    
+    // Stage analysis (for Stan Weinstein strategy)
+    const stage = determineStage(prices, sma30 = calculateSMA(prices, 30));
+    
+    // Trend determination
     const currentPrice = quote.c;
-    const trend = currentPrice > sma50 && sma50 > sma200 ? 'BULLISH' : 
-                  currentPrice < sma50 && sma50 < sma200 ? 'BEARISH' : 'NEUTRAL';
+    const trend = determineTrend(currentPrice, sma20, sma50, sma200);
 
     res.json({
       data: {
         symbol: symbol.toUpperCase(),
         currentPrice,
-        sma50,
-        sma200,
-        rsi,
-        trend,
-        volume: candles[candles.length - 1]?.volume || 0,
-        priceChange24h: quote.d,
-        percentChange24h: quote.dp
+        indicators: {
+          sma: { sma20, sma50, sma200 },
+          ema: { ema12, ema26 },
+          rsi,
+          macd: { value: macd, signal, histogram: macd - signal },
+          bollingerBands: bb,
+          williamsR,
+          volumeAnalysis: {
+            currentVolume: volumes[volumes.length - 1],
+            avgVolume,
+            volumeRatio,
+            volumeTrend: volumeRatio > 1.5 ? 'HIGH' : volumeRatio < 0.5 ? 'LOW' : 'NORMAL'
+          },
+          pivotPoints,
+          stage,
+          trend
+        },
+        strategySignals: {
+          jesseLivermore: analyzeJesseLivermore(currentPrice, prices, volumes, pivotPoints),
+          larryWilliams: analyzeLarryWilliams(currentPrice, candles, williamsR),
+          stanWeinstein: analyzeStanWeinstein(currentPrice, prices, volumes, stage, sma30)
+        }
       }
     });
   } catch (error) {
@@ -217,6 +279,82 @@ const getTechnicalIndicators = async (req, res, next) => {
   }
 };
 
+// Get market sentiment
+export const getMarketSentiment = async (req, res, next) => {
+  try {
+    const { symbol } = req.params;
+    
+    // Get recommendation trends from Finnhub
+    const recommendations = await finnhubService.getRecommendationTrends(symbol.toUpperCase());
+    
+    // Get recent news for sentiment
+    const news = await finnhubService.getNews(symbol.toUpperCase());
+    
+    // Calculate aggregate sentiment
+    let sentiment = 'NEUTRAL';
+    if (recommendations && recommendations.length > 0) {
+      const latest = recommendations[0];
+      const bullishScore = latest.strongBuy + latest.buy;
+      const bearishScore = latest.strongSell + latest.sell;
+      
+      if (bullishScore > bearishScore * 1.5) sentiment = 'BULLISH';
+      else if (bearishScore > bullishScore * 1.5) sentiment = 'BEARISH';
+    }
+    
+    res.json({
+      data: {
+        symbol: symbol.toUpperCase(),
+        sentiment,
+        recommendations: recommendations?.[0] || null,
+        newsCount: news.length,
+        lastUpdate: new Date().toISOString()
+      }
+    });
+  } catch (error) {
+    logger.error(`Error getting sentiment for ${req.params.symbol}:`, error);
+    res.status(500).json({
+      error: 'Market Data Error',
+      message: 'Failed to fetch market sentiment'
+    });
+  }
+};
+
+// Get earnings calendar
+export const getEarningsCalendar = async (req, res, next) => {
+  try {
+    const { from, to } = req.query;
+    
+    const earnings = await finnhubService.getEarningsCalendar(from, to);
+    
+    res.json({
+      data: earnings.earningsCalendar || []
+    });
+  } catch (error) {
+    logger.error('Error fetching earnings calendar:', error);
+    res.status(500).json({
+      error: 'Market Data Error',
+      message: 'Failed to fetch earnings calendar'
+    });
+  }
+};
+
+// Get market status
+export const getMarketStatus = async (req, res, next) => {
+  try {
+    const status = await finnhubService.getMarketStatus();
+    
+    res.json({
+      data: status
+    });
+  } catch (error) {
+    logger.error('Error fetching market status:', error);
+    res.status(500).json({
+      error: 'Market Data Error',
+      message: 'Failed to fetch market status'
+    });
+  }
+};
+
 // Helper functions
 function calculateSMA(prices, period) {
   if (prices.length < period) return null;
@@ -224,6 +362,19 @@ function calculateSMA(prices, period) {
   const relevantPrices = prices.slice(-period);
   const sum = relevantPrices.reduce((a, b) => a + b, 0);
   return Number((sum / period).toFixed(2));
+}
+
+function calculateEMA(prices, period) {
+  if (prices.length < period) return null;
+  
+  const multiplier = 2 / (period + 1);
+  let ema = calculateSMA(prices.slice(0, period), period);
+  
+  for (let i = period; i < prices.length; i++) {
+    ema = (prices[i] - ema) * multiplier + ema;
+  }
+  
+  return Number(ema.toFixed(2));
 }
 
 function calculateRSI(prices, period = 14) {
@@ -253,11 +404,140 @@ function calculateRSI(prices, period = 14) {
   return Number(rsi.toFixed(2));
 }
 
-module.exports = {
+function calculateBollingerBands(prices, period = 20, stdDev = 2) {
+  const sma = calculateSMA(prices, period);
+  if (!sma) return null;
+  
+  const relevantPrices = prices.slice(-period);
+  const squaredDiffs = relevantPrices.map(price => Math.pow(price - sma, 2));
+  const variance = squaredDiffs.reduce((a, b) => a + b, 0) / period;
+  const standardDeviation = Math.sqrt(variance);
+  
+  return {
+    upper: Number((sma + stdDev * standardDeviation).toFixed(2)),
+    middle: sma,
+    lower: Number((sma - stdDev * standardDeviation).toFixed(2))
+  };
+}
+
+function calculateWilliamsR(highs, lows, closes, period = 14) {
+  if (highs.length < period) return null;
+  
+  const recentHighs = highs.slice(-period);
+  const recentLows = lows.slice(-period);
+  const highestHigh = Math.max(...recentHighs);
+  const lowestLow = Math.min(...recentLows);
+  const currentClose = closes[closes.length - 1];
+  
+  const williamsR = ((highestHigh - currentClose) / (highestHigh - lowestLow)) * -100;
+  
+  return Number(williamsR.toFixed(2));
+}
+
+function calculatePivotPoints(high, low, close) {
+  const pivot = (high + low + close) / 3;
+  const r1 = 2 * pivot - low;
+  const s1 = 2 * pivot - high;
+  const r2 = pivot + (high - low);
+  const s2 = pivot - (high - low);
+  
+  return {
+    pivot: Number(pivot.toFixed(2)),
+    resistance1: Number(r1.toFixed(2)),
+    resistance2: Number(r2.toFixed(2)),
+    support1: Number(s1.toFixed(2)),
+    support2: Number(s2.toFixed(2))
+  };
+}
+
+function determineStage(prices, sma30) {
+  if (!sma30 || prices.length < 30) return 'UNKNOWN';
+  
+  const currentPrice = prices[prices.length - 1];
+  const priceAboveSMA = currentPrice > sma30;
+  const smaSlope = sma30 - calculateSMA(prices.slice(0, -5), 30);
+  
+  if (priceAboveSMA && smaSlope > 0) return 'STAGE_2'; // Advancing
+  if (!priceAboveSMA && smaSlope > 0) return 'STAGE_1'; // Basing
+  if (!priceAboveSMA && smaSlope < 0) return 'STAGE_4'; // Declining
+  if (priceAboveSMA && smaSlope < 0) return 'STAGE_3'; // Top
+  
+  return 'STAGE_1';
+}
+
+function determineTrend(currentPrice, sma20, sma50, sma200) {
+  if (!sma20 || !sma50 || !sma200) return 'NEUTRAL';
+  
+  if (currentPrice > sma20 && sma20 > sma50 && sma50 > sma200) return 'STRONG_BULLISH';
+  if (currentPrice > sma50 && sma50 > sma200) return 'BULLISH';
+  if (currentPrice < sma20 && sma20 < sma50 && sma50 < sma200) return 'STRONG_BEARISH';
+  if (currentPrice < sma50 && sma50 < sma200) return 'BEARISH';
+  
+  return 'NEUTRAL';
+}
+
+// Strategy-specific analysis functions
+function analyzeJesseLivermore(currentPrice, prices, volumes, pivotPoints) {
+  const isNewHigh = currentPrice >= Math.max(...prices.slice(-20));
+  const volumeIncrease = volumes[volumes.length - 1] > calculateSMA(volumes, 20) * 1.5;
+  const abovePivot = currentPrice > pivotPoints.pivot;
+  
+  return {
+    signal: isNewHigh && volumeIncrease && abovePivot ? 'BUY' : 'HOLD',
+    strength: (isNewHigh ? 33 : 0) + (volumeIncrease ? 33 : 0) + (abovePivot ? 34 : 0),
+    conditions: {
+      newHigh: isNewHigh,
+      volumeIncrease,
+      abovePivot
+    }
+  };
+}
+
+function analyzeLarryWilliams(currentPrice, candles, williamsR) {
+  const todayRange = candles[candles.length - 1].high - candles[candles.length - 1].low;
+  const yesterdayRange = candles[candles.length - 2].high - candles[candles.length - 2].low;
+  const volatilityBreakout = todayRange > yesterdayRange * 0.5;
+  const oversold = williamsR < -80;
+  const overbought = williamsR > -20;
+  
+  return {
+    signal: oversold && volatilityBreakout ? 'BUY' : overbought ? 'SELL' : 'HOLD',
+    strength: Math.abs(williamsR),
+    conditions: {
+      volatilityBreakout,
+      oversold,
+      overbought
+    }
+  };
+}
+
+function analyzeStanWeinstein(currentPrice, prices, volumes, stage, sma30) {
+  const enteringStage2 = stage === 'STAGE_2' && currentPrice > sma30;
+  const volumeConfirmation = volumes[volumes.length - 1] > calculateSMA(volumes, 20);
+  const relativeStrength = currentPrice / prices[prices.length - 30] > 1.1;
+  
+  return {
+    signal: enteringStage2 && volumeConfirmation && relativeStrength ? 'BUY' : 
+           stage === 'STAGE_4' ? 'SELL' : 'HOLD',
+    stage,
+    strength: stage === 'STAGE_2' ? 100 : stage === 'STAGE_1' ? 50 : 
+             stage === 'STAGE_3' ? 25 : 0,
+    conditions: {
+      enteringStage2,
+      volumeConfirmation,
+      relativeStrength
+    }
+  };
+}
+
+export default {
   getQuote,
   getCandles,
   searchStocks,
   getNews,
   getCompanyProfile,
-  getTechnicalIndicators
+  getTechnicalIndicators,
+  getMarketSentiment,
+  getEarningsCalendar,
+  getMarketStatus
 };

@@ -1,34 +1,30 @@
-const express = require('express');
+import express from 'express';
+import portfolioController from '../controllers/portfolioController.js';
+import { authenticate, authorize } from '../middleware/auth.js';
+import { validatePortfolio, validatePosition, validatePositionUpdate, validateClosePosition } from '../validators/portfolio.js';
+
 const router = express.Router();
-const portfolioController = require('../controllers/portfolioController');
-const { authenticate } = require('../middleware/auth');
-const { validatePosition, validatePositionUpdate } = require('../validators/portfolio');
 
 // All routes require authentication
 router.use(authenticate);
 
-// Get user portfolio
-router.get('/', portfolioController.getPortfolio);
+// Portfolio management
+router.get('/', portfolioController.getPortfolios);
+router.get('/:id', portfolioController.getPortfolioById);
+router.post('/', validatePortfolio, portfolioController.createPortfolio);
+router.put('/:id', validatePortfolio, portfolioController.updatePortfolio);
+router.delete('/:id', portfolioController.deletePortfolio);
 
-// Get portfolio performance
-router.get('/performance', portfolioController.getPerformance);
+// Portfolio performance
+router.get('/:id/performance', portfolioController.getPortfolioPerformance);
 
-// Get all positions
-router.get('/positions', portfolioController.getPositions);
-
-// Add new position
-router.post('/positions', validatePosition, portfolioController.addPosition);
-
-// Update position
+// Position management
+router.get('/:portfolioId/positions', portfolioController.getPositions);
+router.post('/:portfolioId/positions', validatePosition, portfolioController.addPosition);
 router.put('/positions/:id', validatePositionUpdate, portfolioController.updatePosition);
+router.post('/positions/:id/close', validateClosePosition, portfolioController.closePosition);
 
-// Close position
-router.post('/positions/:id/close', portfolioController.closePosition);
+// Trading history
+router.get('/:portfolioId/history', portfolioController.getTradingHistory);
 
-// Get position history
-router.get('/history', portfolioController.getHistory);
-
-// Get portfolio analytics
-router.get('/analytics', portfolioController.getAnalytics);
-
-module.exports = router;
+export default router;

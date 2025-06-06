@@ -34,7 +34,13 @@
     "winston": "^3.11.0",
     "morgan": "^1.10.0",
     "bcryptjs": "^2.4.3",
-    "jsonwebtoken": "^9.0.2"
+    "jsonwebtoken": "^9.0.2",
+    "express-validator": "^7.0.1",
+    "uuid": "^9.0.1",
+    "ws": "^8.16.0",
+    "node-cron": "^3.0.3",
+    "ta-lib": "^0.11.0",
+    "dayjs": "^1.11.10"
   },
   "devDependencies": {
     "nodemon": "^3.0.3",

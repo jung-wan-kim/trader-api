@@ -1,8 +1,9 @@
-const express = require('express');
+import express from 'express';
+import marketController from '../controllers/marketController.js';
+import { authenticate } from '../middleware/auth.js';
+import { validateCandleQuery, validateSymbol, validateIndicatorQuery, validateStrategySignalQuery } from '../validators/market.js';
+
 const router = express.Router();
-const marketController = require('../controllers/marketController');
-const { authenticate } = require('../middleware/auth');
-const { validateCandleQuery, validateSymbol } = require('../validators/market');
 
 // All routes require authentication
 router.use(authenticate);
@@ -22,7 +23,19 @@ router.get('/news/:symbol?', marketController.getNews);
 // Get company profile
 router.get('/profile/:symbol', validateSymbol, marketController.getCompanyProfile);
 
-// Get technical indicators
-router.get('/indicators/:symbol', validateSymbol, marketController.getTechnicalIndicators);
+// Get technical indicators with strategy signals
+router.get('/indicators/:symbol', validateSymbol, validateIndicatorQuery, marketController.getTechnicalIndicators);
 
-module.exports = router;
+// Get market sentiment
+router.get('/sentiment/:symbol', validateSymbol, marketController.getMarketSentiment);
+
+// Get earnings calendar
+router.get('/earnings', marketController.getEarningsCalendar);
+
+// Get market status
+router.get('/status', marketController.getMarketStatus);
+
+// Get strategy-specific signals
+router.get('/signals/:symbol/:strategy', validateStrategySignalQuery, marketController.getStrategySignals);
+
+export default router;

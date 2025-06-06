@@ -1,6 +1,6 @@
-const axios = require('axios');
-const NodeCache = require('node-cache');
-const logger = require('../utils/logger');
+import axios from 'axios';
+import NodeCache from 'node-cache';
+import logger from '../utils/logger.js';
 
 class FinnhubService {
   constructor() {
@@ -16,7 +16,7 @@ class FinnhubService {
     });
   }
 
-  async getQuote(symbol) {
+  async quote(symbol) {
     const cacheKey = `quote_${symbol}`;
     const cached = this.cache.get(cacheKey);
     
@@ -35,6 +35,10 @@ class FinnhubService {
       logger.error('Error fetching quote:', error);
       throw error;
     }
+  }
+
+  async getQuote(symbol) {
+    return this.quote(symbol);
   }
 
   async getCandles(symbol, resolution, from, to) {
@@ -113,6 +117,84 @@ class FinnhubService {
     }
   }
 
+  async getTechnicalIndicator(symbol, indicator, resolution, from, to, params = {}) {
+    const cacheKey = `indicator_${symbol}_${indicator}_${resolution}_${from}_${to}`;
+    const cached = this.cache.get(cacheKey);
+    
+    if (cached) {
+      return cached;
+    }
+
+    try {
+      const response = await this.client.get(`/indicator`, {
+        params: {
+          symbol,
+          indicator,
+          resolution,
+          from,
+          to,
+          ...params
+        }
+      });
+      
+      this.cache.set(cacheKey, response.data);
+      return response.data;
+    } catch (error) {
+      logger.error(`Error fetching ${indicator} indicator:`, error);
+      throw error;
+    }
+  }
+
+  async getMarketStatus() {
+    try {
+      const response = await this.client.get('/stock/market-status', {
+        params: { exchange: 'US' }
+      });
+      
+      return response.data;
+    } catch (error) {
+      logger.error('Error fetching market status:', error);
+      throw error;
+    }
+  }
+
+  async getEarningsCalendar(from = null, to = null) {
+    try {
+      const response = await this.client.get('/calendar/earnings', {
+        params: {
+          from: from || this.getDateString(),
+          to: to || this.getDateString(7)
+        }
+      });
+      
+      return response.data;
+    } catch (error) {
+      logger.error('Error fetching earnings calendar:', error);
+      throw error;
+    }
+  }
+
+  async getRecommendationTrends(symbol) {
+    const cacheKey = `recommendations_${symbol}`;
+    const cached = this.cache.get(cacheKey);
+    
+    if (cached) {
+      return cached;
+    }
+
+    try {
+      const response = await this.client.get('/stock/recommendation', {
+        params: { symbol }
+      });
+      
+      this.cache.set(cacheKey, response.data, 3600); // Cache for 1 hour
+      return response.data;
+    } catch (error) {
+      logger.error('Error fetching recommendation trends:', error);
+      throw error;
+    }
+  }
+
   formatCandles(data) {
     const candles = [];
     
@@ -137,4 +219,8 @@ class FinnhubService {
   }
 }
 
-module.exports = new FinnhubService();
+const finnhubService = new FinnhubService();
+
+export const getFinnhubClient = () => finnhubService;
+
+export default finnhubService;
