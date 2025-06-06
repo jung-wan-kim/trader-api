@@ -355,6 +355,76 @@ export const getMarketStatus = async (req, res, next) => {
   }
 };
 
+// Get strategy signals
+export const getStrategySignals = async (req, res, next) => {
+  try {
+    const { symbol } = req.params;
+    const { strategy } = req.query;
+
+    // Placeholder 응답 - 실제로는 전략별 신호 계산 로직이 필요합니다
+    const strategies = {
+      jesseLivermore: {
+        signal: 'BUY',
+        strength: 75,
+        description: 'Price making new highs with volume',
+        conditions: {
+          newHigh: true,
+          volumeIncrease: true,
+          abovePivot: true
+        }
+      },
+      larryWilliams: {
+        signal: 'HOLD',
+        strength: 50,
+        description: 'Waiting for oversold conditions',
+        conditions: {
+          volatilityBreakout: false,
+          oversold: false,
+          overbought: false
+        }
+      },
+      stanWeinstein: {
+        signal: 'BUY',
+        strength: 80,
+        description: 'Stock in Stage 2 advancement',
+        stage: 'STAGE_2',
+        conditions: {
+          enteringStage2: true,
+          volumeConfirmation: true,
+          relativeStrength: true
+        }
+      }
+    };
+
+    // 특정 전략이 요청된 경우
+    if (strategy && strategies[strategy]) {
+      res.json({
+        data: {
+          symbol: symbol.toUpperCase(),
+          strategy,
+          ...strategies[strategy],
+          timestamp: new Date().toISOString()
+        }
+      });
+    } else {
+      // 모든 전략 신호 반환
+      res.json({
+        data: {
+          symbol: symbol.toUpperCase(),
+          strategies,
+          timestamp: new Date().toISOString()
+        }
+      });
+    }
+  } catch (error) {
+    logger.error(`Error getting strategy signals for ${req.params.symbol}:`, error);
+    res.status(500).json({
+      error: 'Strategy Analysis Error',
+      message: 'Failed to generate strategy signals'
+    });
+  }
+};
+
 // Helper functions
 function calculateSMA(prices, period) {
   if (prices.length < period) return null;
