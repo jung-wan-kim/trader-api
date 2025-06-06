@@ -1,6 +1,6 @@
-const logger = require('../utils/logger.js');
+import logger from '../utils/logger.js';
 
-const errorHandler = (err, req, res, next) => {
+export const errorHandler = (err, req, res, next) => {
   logger.error(err.stack);
 
   // Mongoose validation error
@@ -47,6 +47,3 @@ const errorHandler = (err, req, res, next) => {
   });
 };
 
-module.exports = {
-  errorHandler
-};

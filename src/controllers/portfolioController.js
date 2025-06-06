@@ -1,10 +1,10 @@
-const { supabaseAdmin } = require('../config/supabase.js');
-const finnhubService = require('../services/finnhubService.js');
-const logger = require('../utils/logger.js');
-const { validationResult } = require('express-validator');
+import { supabaseAdmin } from '../config/supabase.js';
+import finnhubService from '../services/finnhubService.js';
+import logger from '../utils/logger.js';
+import { validationResult } from 'express-validator';
 
 // Get user's portfolios
-const getPortfolios = async (req, res, next) => {
+export const getPortfolios = async (req, res, next) => {
   try {
     const userId = req.user.id;
 
@@ -67,7 +67,7 @@ const getPortfolios = async (req, res, next) => {
 };
 
 // Get portfolio by ID
-const getPortfolioById = async (req, res, next) => {
+export const getPortfolioById = async (req, res, next) => {
   try {
     const userId = req.user.id;
     const { id } = req.params;
@@ -127,7 +127,7 @@ const getPortfolioById = async (req, res, next) => {
 };
 
 // Create new portfolio
-const createPortfolio = async (req, res, next) => {
+export const createPortfolio = async (req, res, next) => {
   try {
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
@@ -165,7 +165,7 @@ const createPortfolio = async (req, res, next) => {
 };
 
 // Update portfolio
-const updatePortfolio = async (req, res, next) => {
+export const updatePortfolio = async (req, res, next) => {
   try {
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
@@ -215,7 +215,7 @@ const updatePortfolio = async (req, res, next) => {
 };
 
 // Delete portfolio (only if no open positions)
-const deletePortfolio = async (req, res, next) => {
+export const deletePortfolio = async (req, res, next) => {
   try {
     const userId = req.user.id;
     const { id } = req.params;
@@ -263,7 +263,7 @@ const deletePortfolio = async (req, res, next) => {
 };
 
 // Get portfolio performance
-const getPortfolioPerformance = async (req, res, next) => {
+export const getPortfolioPerformance = async (req, res, next) => {
   try {
     const userId = req.user.id;
     const { id } = req.params;
@@ -368,7 +368,7 @@ const getPortfolioPerformance = async (req, res, next) => {
 };
 
 // Get portfolio positions
-const getPositions = async (req, res, next) => {
+export const getPositions = async (req, res, next) => {
   try {
     const userId = req.user.id;
     const { portfolioId } = req.params;
@@ -435,7 +435,7 @@ const getPositions = async (req, res, next) => {
 };
 
 // Add position to portfolio
-const addPosition = async (req, res, next) => {
+export const addPosition = async (req, res, next) => {
   try {
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
@@ -543,7 +543,7 @@ const addPosition = async (req, res, next) => {
 };
 
 // Update position (stop loss, take profit)
-const updatePosition = async (req, res, next) => {
+export const updatePosition = async (req, res, next) => {
   try {
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
@@ -600,7 +600,7 @@ const updatePosition = async (req, res, next) => {
 };
 
 // Close position
-const closePosition = async (req, res, next) => {
+export const closePosition = async (req, res, next) => {
   try {
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
@@ -713,7 +713,7 @@ const closePosition = async (req, res, next) => {
 };
 
 // Get trading history
-const getTradingHistory = async (req, res, next) => {
+export const getTradingHistory = async (req, res, next) => {
   try {
     const userId = req.user.id;
     const { portfolioId } = req.params;
@@ -813,30 +813,3 @@ function calculateMonthlyReturns(positions, initialCapital) {
   }));
 }
 
-module.exports = {
-  getPortfolios,
-  getPortfolioById,
-  createPortfolio,
-  updatePortfolio,
-  deletePortfolio,
-  getPortfolioPerformance,
-  getPositions,
-  addPosition,
-  updatePosition,
-  closePosition,
-  getTradingHistory
-};
-
-export default {
-  getPortfolios,
-  getPortfolioById,
-  createPortfolio,
-  updatePortfolio,
-  deletePortfolio,
-  getPortfolioPerformance,
-  getPositions,
-  addPosition,
-  updatePosition,
-  closePosition,
-  getTradingHistory
-};

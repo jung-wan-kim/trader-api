@@ -1,10 +1,10 @@
-const { supabaseAdmin } = require('../config/supabase.js');
-const logger = require('../utils/logger.js');
-const { getFinnhubClient } = require('../services/finnhubService.js');
-const dayjs = require('dayjs');
+import { supabaseAdmin } from '../config/supabase.js';
+import logger from '../utils/logger.js';
+import { getFinnhubClient } from '../services/finnhubService.js';
+import dayjs from 'dayjs';
 
 // Get recommendations based on user's subscribed strategies
-const getRecommendations = async (req, res, next) => {
+export const getRecommendations = async (req, res, next) => {
   try {
     const userId = req.user.id;
     const userTier = req.user.subscription_tier || 'basic';
@@ -126,7 +126,7 @@ const getRecommendations = async (req, res, next) => {
 };
 
 // Get recommendation by ID
-const getRecommendationById = async (req, res, next) => {
+export const getRecommendationById = async (req, res, next) => {
   try {
     const { id } = req.params;
     const userId = req.user.id;
@@ -198,7 +198,7 @@ const getRecommendationById = async (req, res, next) => {
 };
 
 // Get recommendations for a specific strategy
-const getRecommendationsByStrategy = async (req, res, next) => {
+export const getRecommendationsByStrategy = async (req, res, next) => {
   try {
     const { strategyId } = req.params;
     const userTier = req.user.subscription_tier || 'basic';
@@ -237,7 +237,7 @@ const getRecommendationsByStrategy = async (req, res, next) => {
 };
 
 // Get live/real-time recommendations (WebSocket endpoint info)
-const getLiveRecommendations = async (req, res, next) => {
+export const getLiveRecommendations = async (req, res, next) => {
   try {
     const userId = req.user.id;
     const userTier = req.user.subscription_tier || 'basic';
@@ -267,7 +267,7 @@ const getLiveRecommendations = async (req, res, next) => {
 };
 
 // Follow a recommendation (create position)
-const followRecommendation = async (req, res, next) => {
+export const followRecommendation = async (req, res, next) => {
   try {
     const { id } = req.params;
     const userId = req.user.id;
@@ -382,7 +382,7 @@ const followRecommendation = async (req, res, next) => {
 };
 
 // Like/Unlike recommendation
-const toggleLike = async (req, res, next) => {
+export const toggleLike = async (req, res, next) => {
   try {
     const { id } = req.params;
     const userId = req.user.id;
@@ -435,7 +435,7 @@ const toggleLike = async (req, res, next) => {
 };
 
 // Get recommendation performance analytics
-const getRecommendationPerformance = async (req, res, next) => {
+export const getRecommendationPerformance = async (req, res, next) => {
   try {
     const { id } = req.params;
 
@@ -524,22 +524,3 @@ const getRecommendationPerformance = async (req, res, next) => {
   }
 };
 
-module.exports = {
-  getRecommendations,
-  getRecommendationById,
-  getRecommendationsByStrategy,
-  getLiveRecommendations,
-  followRecommendation,
-  toggleLike,
-  getRecommendationPerformance
-};
-
-export default {
-  getRecommendations,
-  getRecommendationById,
-  getRecommendationsByStrategy,
-  getLiveRecommendations,
-  followRecommendation,
-  toggleLike,
-  getRecommendationPerformance
-};

@@ -1,6 +1,6 @@
-const axios = require('axios');
-const NodeCache = require('node-cache');
-const logger = require('../utils/logger.js');
+import axios from 'axios';
+import NodeCache from 'node-cache';
+import logger from '../utils/logger.js';
 
 class FinnhubService {
   constructor() {
@@ -221,7 +221,5 @@ class FinnhubService {
 
 const finnhubService = new FinnhubService();
 
-const getFinnhubClient = () => finnhubService;
-
-module.exports = finnhubService;
-module.exports.getFinnhubClient = getFinnhubClient;
+export const getFinnhubClient = () => finnhubService;
+export default finnhubService;

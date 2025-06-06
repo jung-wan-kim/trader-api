@@ -1,9 +1,9 @@
-const { supabase, supabaseAdmin } = require('../config/supabase.js');
-const { validationResult } = require('express-validator');
-const logger = require('../utils/logger.js');
+import { supabase, supabaseAdmin } from '../config/supabase.js';
+import { validationResult } from 'express-validator';
+import logger from '../utils/logger.js';
 
 // Register new user
-const register = async (req, res, next) => {
+export const register = async (req, res, next) => {
   try {
     // Check validation errors
     const errors = validationResult(req);
@@ -85,7 +85,7 @@ const register = async (req, res, next) => {
 };
 
 // Login user
-const login = async (req, res, next) => {
+export const login = async (req, res, next) => {
   try {
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
@@ -135,7 +135,7 @@ const login = async (req, res, next) => {
 };
 
 // Refresh token
-const refreshToken = async (req, res, next) => {
+export const refreshToken = async (req, res, next) => {
   try {
     const { refresh_token } = req.body;
 
@@ -167,7 +167,7 @@ const refreshToken = async (req, res, next) => {
 };
 
 // Logout user
-const logout = async (req, res, next) => {
+export const logout = async (req, res, next) => {
   try {
     const authHeader = req.headers.authorization;
     const token = authHeader?.substring(7);
@@ -186,7 +186,7 @@ const logout = async (req, res, next) => {
 };
 
 // Get user profile
-const getProfile = async (req, res, next) => {
+export const getProfile = async (req, res, next) => {
   try {
     const userId = req.user.id;
 
@@ -230,7 +230,7 @@ const getProfile = async (req, res, next) => {
 };
 
 // Update user profile
-const updateProfile = async (req, res, next) => {
+export const updateProfile = async (req, res, next) => {
   try {
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
@@ -274,7 +274,7 @@ const updateProfile = async (req, res, next) => {
 };
 
 // Change password
-const changePassword = async (req, res, next) => {
+export const changePassword = async (req, res, next) => {
   try {
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
@@ -318,7 +318,7 @@ const changePassword = async (req, res, next) => {
 };
 
 // Request password reset
-const requestPasswordReset = async (req, res, next) => {
+export const requestPasswordReset = async (req, res, next) => {
   try {
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
@@ -347,7 +347,7 @@ const requestPasswordReset = async (req, res, next) => {
 };
 
 // Delete account
-const deleteAccount = async (req, res, next) => {
+export const deleteAccount = async (req, res, next) => {
   try {
     const userId = req.user.id;
     const { password } = req.body;
@@ -394,26 +394,3 @@ const deleteAccount = async (req, res, next) => {
   }
 };
 
-module.exports = {
-  register,
-  login,
-  refreshToken,
-  logout,
-  getProfile,
-  updateProfile,
-  changePassword,
-  requestPasswordReset,
-  deleteAccount
-};
-
-export default {
-  register,
-  login,
-  refreshToken,
-  logout,
-  getProfile,
-  updateProfile,
-  changePassword,
-  requestPasswordReset,
-  deleteAccount
-};

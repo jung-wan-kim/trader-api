@@ -1,5 +1,5 @@
-const { supabaseAdmin } = require('../config/supabase.js');
-const logger = require('../utils/logger.js');
+import { supabaseAdmin } from '../config/supabase.js';
+import logger from '../utils/logger.js';
 
 // Strategy definitions for legendary traders
 const LEGENDARY_STRATEGIES = {
@@ -54,7 +54,7 @@ const LEGENDARY_STRATEGIES = {
 };
 
 // Get all strategies
-const getStrategies = async (req, res, next) => {
+export const getStrategies = async (req, res, next) => {
   try {
     const { 
       type,
@@ -121,7 +121,7 @@ const getStrategies = async (req, res, next) => {
 };
 
 // Get strategy by ID
-const getStrategyById = async (req, res, next) => {
+export const getStrategyById = async (req, res, next) => {
   try {
     const { id } = req.params;
     const userTier = req.user?.subscription_tier || 'basic';
@@ -183,7 +183,7 @@ const getStrategyById = async (req, res, next) => {
 };
 
 // Subscribe to strategy
-const subscribeToStrategy = async (req, res, next) => {
+export const subscribeToStrategy = async (req, res, next) => {
   try {
     const { id } = req.params;
     const userId = req.user.id;
@@ -252,7 +252,7 @@ const subscribeToStrategy = async (req, res, next) => {
 };
 
 // Unsubscribe from strategy
-const unsubscribeFromStrategy = async (req, res, next) => {
+export const unsubscribeFromStrategy = async (req, res, next) => {
   try {
     const { id } = req.params;
     const userId = req.user.id;
@@ -281,7 +281,7 @@ const unsubscribeFromStrategy = async (req, res, next) => {
 };
 
 // Get strategy performance
-const getStrategyPerformance = async (req, res, next) => {
+export const getStrategyPerformance = async (req, res, next) => {
   try {
     const { id } = req.params;
     const { period = '1M' } = req.query;
@@ -368,7 +368,7 @@ const getStrategyPerformance = async (req, res, next) => {
 };
 
 // Get user's subscribed strategies
-const getUserStrategies = async (req, res, next) => {
+export const getUserStrategies = async (req, res, next) => {
   try {
     const userId = req.user.id;
 
@@ -463,20 +463,3 @@ function calculateSharpeRatio(monthlyReturns) {
   return stdDev > 0 ? ((avgReturn - riskFreeRate) / stdDev).toFixed(2) : 0;
 }
 
-module.exports = {
-  getStrategies,
-  getStrategyById,
-  subscribeToStrategy,
-  unsubscribeFromStrategy,
-  getStrategyPerformance,
-  getUserStrategies
-};
-
-export default {
-  getStrategies,
-  getStrategyById,
-  subscribeToStrategy,
-  unsubscribeFromStrategy,
-  getStrategyPerformance,
-  getUserStrategies
-};
