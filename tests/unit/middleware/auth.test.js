@@ -1,11 +1,18 @@
 import { jest } from '@jest/globals';
 import { authenticate, authorize, tierRateLimit } from '../../../src/middleware/auth.js';
-import { createMockSupabaseAdmin, mockUser, mockProfile } from '../../helpers/supabaseMocks.js';
+import { mockUser, mockProfile } from '../../helpers/supabaseMocks.js';
 
 // Mock dependencies
 jest.mock('../../../src/config/supabase.js', () => ({
   verifySession: jest.fn(),
-  supabaseAdmin: createMockSupabaseAdmin()
+  supabaseAdmin: {
+    from: jest.fn().mockReturnValue({
+      select: jest.fn().mockReturnThis(),
+      eq: jest.fn().mockReturnThis(),
+      single: jest.fn(),
+      insert: jest.fn().mockReturnThis()
+    })
+  }
 }));
 
 // Import mocked modules

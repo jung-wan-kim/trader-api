@@ -113,7 +113,7 @@ export const tierRateLimit = (req, res, next) => {
   };
 
   // Store limit info in request for rate limiter middleware
-  req.rateLimit = limits[tier];
+  req.rateLimit = limits[tier] || limits.basic;
   next();
 };
 

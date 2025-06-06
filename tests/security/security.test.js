@@ -7,16 +7,50 @@ import {
   generateTestUser 
 } from '../helpers/testUtils.js';
 import {
-  createMockSupabaseClient,
-  createMockSupabaseAdmin,
   mockUser,
   mockProfile
 } from '../helpers/supabaseMocks.js';
 
 // Mock dependencies for security testing
 jest.mock('../../src/config/supabase.js', () => ({
-  supabase: createMockSupabaseClient(),
-  supabaseAdmin: createMockSupabaseAdmin(),
+  supabase: {
+    auth: {
+      signUp: jest.fn(),
+      signInWithPassword: jest.fn(),
+      signOut: jest.fn(),
+      refreshSession: jest.fn(),
+      updateUser: jest.fn(),
+      resetPasswordForEmail: jest.fn(),
+      getUser: jest.fn(),
+      getSession: jest.fn(),
+    },
+    from: jest.fn(() => ({
+      select: jest.fn().mockReturnThis(),
+      insert: jest.fn().mockReturnThis(),
+      update: jest.fn().mockReturnThis(),
+      delete: jest.fn().mockReturnThis(),
+      eq: jest.fn().mockReturnThis(),
+      single: jest.fn(),
+    }))
+  },
+  supabaseAdmin: {
+    auth: {
+      admin: {
+        createUser: jest.fn(),
+        deleteUser: jest.fn(),
+        updateUserById: jest.fn(),
+        listUsers: jest.fn(),
+      },
+    },
+    from: jest.fn(() => ({
+      select: jest.fn().mockReturnThis(),
+      insert: jest.fn().mockReturnThis(),
+      update: jest.fn().mockReturnThis(),
+      delete: jest.fn().mockReturnThis(),
+      eq: jest.fn().mockReturnThis(),
+      single: jest.fn(),
+    }))
+  },
   verifySession: jest.fn()
 }));
 
