@@ -1,7 +1,7 @@
-import express from 'express';
-import subscriptionController from '../controllers/subscriptionController.js';
-import { authenticate } from '../middleware/auth.js';
-import { validateSubscription, validateUpgrade, validatePaymentMethod } from '../validators/subscription.js';
+const express = require('express');
+const subscriptionController = require('../controllers/subscriptionController.js');
+const { authenticate } = require('../middleware/auth.js');
+const { validateSubscription, validateUpgrade, validatePaymentMethod } = require('../validators/subscription.js');
 
 const router = express.Router();
 
@@ -32,4 +32,4 @@ router.get('/history', subscriptionController.getSubscriptionHistory);
 // Update payment method
 router.put('/payment-method', validatePaymentMethod, subscriptionController.updatePaymentMethod);
 
-export default router;
+module.exports = router;

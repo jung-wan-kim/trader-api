@@ -1,12 +1,12 @@
-import { param, query, body } from 'express-validator';
+const { param, query, body } = require('express-validator');
 
-export const validateStrategyId = [
+const validateStrategyId = [
   param('id')
     .isIn(['jesse-livermore', 'larry-williams', 'stan-weinstein'])
     .withMessage('Invalid strategy ID. Must be one of: jesse-livermore, larry-williams, stan-weinstein')
 ];
 
-export const validateStrategyQuery = [
+const validateStrategyQuery = [
   query('type')
     .optional()
     .isIn(['trend_following', 'momentum', 'stage_analysis'])
@@ -21,7 +21,7 @@ export const validateStrategyQuery = [
     .withMessage('Invalid tier')
 ];
 
-export const validateBacktestRequest = [
+const validateBacktestRequest = [
   param('id')
     .isIn(['jesse-livermore', 'larry-williams', 'stan-weinstein'])
     .withMessage('Invalid strategy ID'),
@@ -65,7 +65,7 @@ export const validateBacktestRequest = [
     .withMessage('Slippage must be between 0 and 10%')
 ];
 
-export const validatePerformanceQuery = [
+const validatePerformanceQuery = [
   param('id')
     .isIn(['jesse-livermore', 'larry-williams', 'stan-weinstein'])
     .withMessage('Invalid strategy ID'),

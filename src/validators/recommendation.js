@@ -1,6 +1,6 @@
-import { query, body } from 'express-validator';
+const { query, body } = require('express-validator');
 
-export const validateRecommendationQuery = [
+const validateRecommendationQuery = [
   query('strategy_id')
     .optional()
     .isIn(['jesse-livermore', 'larry-williams', 'stan-weinstein'])
@@ -37,7 +37,7 @@ export const validateRecommendationQuery = [
     .withMessage('Offset must be a positive integer')
 ];
 
-export const validateFollowRecommendation = [
+const validateFollowRecommendation = [
   body('portfolio_id')
     .notEmpty()
     .isUUID()

@@ -1,6 +1,6 @@
-import { supabaseAdmin } from '../config/supabase.js';
-import logger from '../utils/logger.js';
-import { validationResult } from 'express-validator';
+const { supabaseAdmin } = require('../config/supabase.js');
+const logger = require('../utils/logger.js');
+const { validationResult } = require('express-validator');
 
 // Subscription plans configuration
 const SUBSCRIPTION_PLANS = {
@@ -52,7 +52,7 @@ const SUBSCRIPTION_PLANS = {
 };
 
 // Get available subscription plans
-export const getPlans = async (req, res, next) => {
+const getPlans = async (req, res, next) => {
   try {
     const plans = Object.values(SUBSCRIPTION_PLANS).map(plan => ({
       ...plan,
@@ -71,7 +71,7 @@ export const getPlans = async (req, res, next) => {
 };
 
 // Get current subscription
-export const getCurrentSubscription = async (req, res, next) => {
+const getCurrentSubscription = async (req, res, next) => {
   try {
     const userId = req.user.id;
 
@@ -119,7 +119,7 @@ export const getCurrentSubscription = async (req, res, next) => {
 };
 
 // Create or update subscription
-export const createSubscription = async (req, res, next) => {
+const createSubscription = async (req, res, next) => {
   try {
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
@@ -254,7 +254,7 @@ export const createSubscription = async (req, res, next) => {
 };
 
 // Upgrade subscription
-export const upgradeSubscription = async (req, res, next) => {
+const upgradeSubscription = async (req, res, next) => {
   try {
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
@@ -365,7 +365,7 @@ export const upgradeSubscription = async (req, res, next) => {
 };
 
 // Cancel subscription
-export const cancelSubscription = async (req, res, next) => {
+const cancelSubscription = async (req, res, next) => {
   try {
     const userId = req.user.id;
     const { reason, feedback } = req.body;
@@ -439,7 +439,7 @@ export const cancelSubscription = async (req, res, next) => {
 };
 
 // Get subscription usage
-export const getUsage = async (req, res, next) => {
+const getUsage = async (req, res, next) => {
   try {
     const userId = req.user.id;
     const { period = 'current' } = req.query;
@@ -529,7 +529,7 @@ export const getUsage = async (req, res, next) => {
 };
 
 // Get subscription history
-export const getSubscriptionHistory = async (req, res, next) => {
+const getSubscriptionHistory = async (req, res, next) => {
   try {
     const userId = req.user.id;
     const { limit = 50, offset = 0 } = req.query;
@@ -558,7 +558,7 @@ export const getSubscriptionHistory = async (req, res, next) => {
 };
 
 // Update payment method
-export const updatePaymentMethod = async (req, res, next) => {
+const updatePaymentMethod = async (req, res, next) => {
   try {
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
@@ -651,7 +651,7 @@ async function validatePaymentMethod(paymentMethodId) {
   return paymentMethodId && paymentMethodId.startsWith('pm_');
 }
 
-export default {
+module.exports = {
   getPlans,
   getCurrentSubscription,
   createSubscription,

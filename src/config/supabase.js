@@ -1,18 +1,18 @@
-import { createClient } from '@supabase/supabase-js';
-import dotenv from 'dotenv';
+const { createClient } = require('@supabase/supabase-js');
+const dotenv = require('dotenv');
 
 dotenv.config();
 
 const supabaseUrl = process.env.SUPABASE_URL;
 const supabaseAnonKey = process.env.SUPABASE_ANON_KEY;
-const supabaseServiceKey = process.env.SUPABASE_SERVICE_KEY;
+const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
 
 if (!supabaseUrl || !supabaseAnonKey || !supabaseServiceKey) {
   throw new Error('Missing Supabase environment variables');
 }
 
 // Public client for client-facing operations
-export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
+const supabase = createClient(supabaseUrl, supabaseAnonKey, {
   auth: {
     autoRefreshToken: true,
     persistSession: false,
@@ -21,7 +21,7 @@ export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
 });
 
 // Admin client for server-side operations
-export const supabaseAdmin = createClient(supabaseUrl, supabaseServiceKey, {
+const supabaseAdmin = createClient(supabaseUrl, supabaseServiceKey, {
   auth: {
     autoRefreshToken: false,
     persistSession: false
@@ -29,7 +29,7 @@ export const supabaseAdmin = createClient(supabaseUrl, supabaseServiceKey, {
 });
 
 // Helper function to get user from token
-export const getUserFromToken = async (token) => {
+const getUserFromToken = async (token) => {
   try {
     const { data: { user }, error } = await supabase.auth.getUser(token);
     if (error) throw error;
@@ -41,7 +41,7 @@ export const getUserFromToken = async (token) => {
 };
 
 // Helper function to verify user session
-export const verifySession = async (accessToken) => {
+const verifySession = async (accessToken) => {
   try {
     const { data, error } = await supabaseAdmin.auth.getUser(accessToken);
     if (error) throw error;
@@ -52,4 +52,9 @@ export const verifySession = async (accessToken) => {
   }
 };
 
-export default supabase;
+module.exports = {
+  supabase,
+  supabaseAdmin,
+  getUserFromToken,
+  verifySession
+};

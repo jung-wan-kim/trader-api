@@ -1,6 +1,6 @@
-import { param, query } from 'express-validator';
+const { param, query } = require('express-validator');
 
-export const validateSymbol = [
+const validateSymbol = [
   param('symbol')
     .trim()
     .toUpperCase()
@@ -10,7 +10,7 @@ export const validateSymbol = [
     .withMessage('Stock symbol must contain only letters')
 ];
 
-export const validateCandleQuery = [
+const validateCandleQuery = [
   query('resolution')
     .optional()
     .isIn(['1', '5', '15', '30', '60', 'D', 'W', 'M'])
@@ -33,7 +33,7 @@ export const validateCandleQuery = [
     })
 ];
 
-export const validateIndicatorQuery = [
+const validateIndicatorQuery = [
   param('symbol')
     .trim()
     .toUpperCase()
@@ -58,7 +58,7 @@ export const validateIndicatorQuery = [
     .withMessage('Invalid indicators. Must be comma-separated list of: sma, ema, rsi, macd, bollinger, williams')
 ];
 
-export const validateStrategySignalQuery = [
+const validateStrategySignalQuery = [
   param('symbol')
     .trim()
     .toUpperCase()

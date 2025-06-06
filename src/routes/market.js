@@ -1,7 +1,7 @@
-import express from 'express';
-import marketController from '../controllers/marketController.js';
-import { authenticate } from '../middleware/auth.js';
-import { validateCandleQuery, validateSymbol, validateIndicatorQuery, validateStrategySignalQuery } from '../validators/market.js';
+const express = require('express');
+const marketController = require('../controllers/marketController.js');
+const { authenticate } = require('../middleware/auth.js');
+const { validateCandleQuery, validateSymbol, validateIndicatorQuery, validateStrategySignalQuery } = require('../validators/market.js');
 
 const router = express.Router();
 
@@ -38,4 +38,4 @@ router.get('/status', marketController.getMarketStatus);
 // Get strategy-specific signals
 router.get('/signals/:symbol/:strategy', validateStrategySignalQuery, marketController.getStrategySignals);
 
-export default router;
+module.exports = router;

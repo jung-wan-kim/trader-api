@@ -1,7 +1,7 @@
-import express from 'express';
-import recommendationController from '../controllers/recommendationController.js';
-import { authenticate, authorize, tierRateLimit } from '../middleware/auth.js';
-import { validateRecommendationQuery, validateFollowRecommendation } from '../validators/recommendation.js';
+const express = require('express');
+const recommendationController = require('../controllers/recommendationController.js');
+const { authenticate, authorize, tierRateLimit } = require('../middleware/auth.js');
+const { validateRecommendationQuery, validateFollowRecommendation } = require('../validators/recommendation.js');
 
 const router = express.Router();
 
@@ -30,4 +30,4 @@ router.post('/:id/like', recommendationController.toggleLike);
 // Follow recommendation (create position)
 router.post('/:id/follow', validateFollowRecommendation, recommendationController.followRecommendation);
 
-export default router;
+module.exports = router;

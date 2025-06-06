@@ -16,4 +16,7 @@ const strictRateLimiter = rateLimit({
   legacyHeaders: false,
 });
 
-module.exports = { rateLimiter, strictRateLimiter };
+module.exports = {
+  rateLimiter,
+  strictRateLimiter
+};

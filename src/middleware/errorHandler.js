@@ -1,4 +1,4 @@
-const logger = require('../utils/logger');
+const logger = require('../utils/logger.js');
 
 const errorHandler = (err, req, res, next) => {
   logger.error(err.stack);
@@ -47,4 +47,6 @@ const errorHandler = (err, req, res, next) => {
   });
 };
 
-module.exports = { errorHandler };
+module.exports = {
+  errorHandler
+};

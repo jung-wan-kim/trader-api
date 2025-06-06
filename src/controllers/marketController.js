@@ -1,9 +1,9 @@
-import finnhubService from '../services/finnhubService.js';
-import { supabaseAdmin } from '../config/supabase.js';
-import logger from '../utils/logger.js';
+const finnhubService = require('../services/finnhubService.js');
+const { supabaseAdmin } = require('../config/supabase.js');
+const logger = require('../utils/logger.js');
 
 // Get real-time quote
-export const getQuote = async (req, res, next) => {
+const getQuote = async (req, res, next) => {
   try {
     const { symbol } = req.params;
     
@@ -32,7 +32,7 @@ export const getQuote = async (req, res, next) => {
 };
 
 // Get candlestick data
-export const getCandles = async (req, res, next) => {
+const getCandles = async (req, res, next) => {
   try {
     const { symbol } = req.params;
     const { 
@@ -65,7 +65,7 @@ export const getCandles = async (req, res, next) => {
 };
 
 // Search stocks
-export const searchStocks = async (req, res, next) => {
+const searchStocks = async (req, res, next) => {
   try {
     const { q } = req.query;
 
@@ -96,7 +96,7 @@ export const searchStocks = async (req, res, next) => {
 };
 
 // Get news
-export const getNews = async (req, res, next) => {
+const getNews = async (req, res, next) => {
   try {
     const { symbol } = req.params;
     const { from, to } = req.query;
@@ -125,7 +125,7 @@ export const getNews = async (req, res, next) => {
 };
 
 // Get company profile
-export const getCompanyProfile = async (req, res, next) => {
+const getCompanyProfile = async (req, res, next) => {
   try {
     const { symbol } = req.params;
 
@@ -164,7 +164,7 @@ export const getCompanyProfile = async (req, res, next) => {
 };
 
 // Get technical indicators
-export const getTechnicalIndicators = async (req, res, next) => {
+const getTechnicalIndicators = async (req, res, next) => {
   try {
     const { symbol } = req.params;
     const { period = '1Y' } = req.query;
@@ -280,7 +280,7 @@ export const getTechnicalIndicators = async (req, res, next) => {
 };
 
 // Get market sentiment
-export const getMarketSentiment = async (req, res, next) => {
+const getMarketSentiment = async (req, res, next) => {
   try {
     const { symbol } = req.params;
     
@@ -320,7 +320,7 @@ export const getMarketSentiment = async (req, res, next) => {
 };
 
 // Get earnings calendar
-export const getEarningsCalendar = async (req, res, next) => {
+const getEarningsCalendar = async (req, res, next) => {
   try {
     const { from, to } = req.query;
     
@@ -339,7 +339,7 @@ export const getEarningsCalendar = async (req, res, next) => {
 };
 
 // Get market status
-export const getMarketStatus = async (req, res, next) => {
+const getMarketStatus = async (req, res, next) => {
   try {
     const status = await finnhubService.getMarketStatus();
     
@@ -530,7 +530,7 @@ function analyzeStanWeinstein(currentPrice, prices, volumes, stage, sma30) {
   };
 }
 
-export default {
+module.exports = {
   getQuote,
   getCandles,
   searchStocks,

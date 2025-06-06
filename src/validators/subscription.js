@@ -1,6 +1,6 @@
-import { body, param } from 'express-validator';
+const { body, param } = require('express-validator');
 
-export const validateSubscription = [
+const validateSubscription = [
   body('plan_id')
     .notEmpty()
     .isIn(['basic', 'premium', 'professional'])
@@ -15,7 +15,7 @@ export const validateSubscription = [
     .withMessage('Payment method ID must be a string')
 ];
 
-export const validateUpgrade = [
+const validateUpgrade = [
   body('new_plan_id')
     .notEmpty()
     .isIn(['basic', 'premium', 'professional'])
@@ -31,7 +31,7 @@ export const validateUpgrade = [
     .withMessage('Immediate flag must be a boolean')
 ];
 
-export const validatePaymentMethod = [
+const validatePaymentMethod = [
   body('payment_method_id')
     .notEmpty()
     .isString()
@@ -61,7 +61,7 @@ export const validatePaymentMethod = [
     })
 ];
 
-export const validateUsageQuery = [
+const validateUsageQuery = [
   param('metric')
     .optional()
     .isIn(['recommendations', 'api_calls', 'portfolios', 'strategies'])

@@ -1,6 +1,6 @@
-import { body, param } from 'express-validator';
+const { body, param } = require('express-validator');
 
-export const validatePortfolio = [
+const validatePortfolio = [
   body('name')
     .trim()
     .isLength({ min: 1, max: 100 })
@@ -16,7 +16,7 @@ export const validatePortfolio = [
     .withMessage('Description must not exceed 500 characters')
 ];
 
-export const validatePosition = [
+const validatePosition = [
   body('symbol')
     .trim()
     .toUpperCase()
@@ -77,7 +77,7 @@ export const validatePosition = [
     .withMessage('Notes must not exceed 1000 characters')
 ];
 
-export const validatePositionUpdate = [
+const validatePositionUpdate = [
   param('id')
     .isUUID()
     .withMessage('Invalid position ID'),
@@ -96,7 +96,7 @@ export const validatePositionUpdate = [
     .withMessage('Notes must not exceed 1000 characters')
 ];
 
-export const validateClosePosition = [
+const validateClosePosition = [
   param('id')
     .isUUID()
     .withMessage('Invalid position ID'),

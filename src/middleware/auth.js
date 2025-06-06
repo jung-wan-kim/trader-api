@@ -1,6 +1,6 @@
-import { verifySession, supabaseAdmin } from '../config/supabase.js';
+const { verifySession, supabaseAdmin } = require('../config/supabase.js');
 
-export const authenticate = async (req, res, next) => {
+const authenticate = async (req, res, next) => {
   try {
     const authHeader = req.headers.authorization;
     
@@ -73,7 +73,7 @@ export const authenticate = async (req, res, next) => {
   }
 };
 
-export const authorize = (...requiredTiers) => {
+const authorize = (...requiredTiers) => {
   return (req, res, next) => {
     if (!req.user) {
       return res.status(401).json({
@@ -104,7 +104,7 @@ export const authorize = (...requiredTiers) => {
 };
 
 // Rate limiting by subscription tier
-export const tierRateLimit = (req, res, next) => {
+const tierRateLimit = (req, res, next) => {
   const tier = req.user?.subscription_tier || 'basic';
   const limits = {
     basic: { requests: 100, window: '1h' },
@@ -117,4 +117,4 @@ export const tierRateLimit = (req, res, next) => {
   next();
 };
 
-export default { authenticate, authorize, tierRateLimit };
+module.exports = { authenticate, authorize, tierRateLimit };

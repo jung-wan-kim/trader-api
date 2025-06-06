@@ -1,7 +1,7 @@
-import express from 'express';
-import strategyController from '../controllers/strategyController.js';
-import { authenticate, authorize } from '../middleware/auth.js';
-import { validateStrategyId, validateStrategyQuery, validateBacktestRequest, validatePerformanceQuery } from '../validators/strategy.js';
+const express = require('express');
+const strategyController = require('../controllers/strategyController.js');
+const { authenticate, authorize } = require('../middleware/auth.js');
+const { validateStrategyId, validateStrategyQuery, validateBacktestRequest, validatePerformanceQuery } = require('../validators/strategy.js');
 
 const router = express.Router();
 
@@ -29,4 +29,4 @@ router.get('/:id/performance', validatePerformanceQuery, strategyController.getS
 // Backtest strategy (Premium and Professional only)
 router.post('/:id/backtest', authorize(['premium', 'professional']), validateBacktestRequest, strategyController.backtestStrategy);
 
-export default router;
+module.exports = router;

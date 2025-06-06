@@ -1,6 +1,6 @@
-import { body, validationResult } from 'express-validator';
+const { body, validationResult } = require('express-validator');
 
-export const validateRegister = [
+const validateRegister = [
   body('email')
     .isEmail()
     .normalizeEmail()
@@ -20,7 +20,7 @@ export const validateRegister = [
     .withMessage('Invalid investment style')
 ];
 
-export const validateLogin = [
+const validateLogin = [
   body('email')
     .isEmail()
     .normalizeEmail()
@@ -30,7 +30,7 @@ export const validateLogin = [
     .withMessage('Password is required')
 ];
 
-export const validateProfile = [
+const validateProfile = [
   body('name')
     .optional()
     .trim()
@@ -50,7 +50,7 @@ export const validateProfile = [
     .withMessage('Notification preferences must be an object')
 ];
 
-export const validatePasswordChange = [
+const validatePasswordChange = [
   body('current_password')
     .notEmpty()
     .withMessage('Current password is required'),
