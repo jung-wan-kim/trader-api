@@ -1,14 +1,79 @@
+# Dependencies
 node_modules
-npm-debug.log
-.env
-.env.local
-.env.production
-.git
-.gitignore
-README.md
+npm-debug.log*
+
+# Runtime data
+pids
+*.pid
+*.seed
+*.pid.lock
+
+# Coverage directory used by tools like istanbul
+coverage
+*.lcov
+
+# nyc test coverage
+.nyc_output
+
+# Logs
+logs
+*.log
+
+# Environment files
+.env*
+!.env.example
+
+# Build outputs
+dist
+
+# IDE
 .vscode
 .idea
-coverage
-.nyc_output
+
+# OS generated files
 .DS_Store
-logs/*.log
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# Git
+.git
+.gitignore
+.gitattributes
+
+# Documentation
+README.md
+DEPLOYMENT.md
+SETUP_GITHUB.md
+*.md
+
+# Test files
+tests
+*.test.js
+*.spec.js
+
+# Development tools
+.prettierrc
+.eslintrc*
+jest.config.js
+nodemon.json
+
+# Docker
+Dockerfile*
+docker-compose*
+.dockerignore
+
+# Scripts
+scripts
+
+# Documentation
+docs
+
+# Postman collections
+postman
+
+# Supabase migrations (handled separately)
+supabase

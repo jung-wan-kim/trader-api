@@ -1,6 +1,7 @@
 const winston = require('winston');
 const path = require('path');
 const fs = require('fs');
+const config = require('../config/environment.js').default;
 
 // CommonJS 환경에서는 __dirname이 자동으로 사용 가능
 
@@ -20,6 +21,8 @@ const getLogLevel = (): LogLevel => {
   
   switch (env) {
     case 'production':
+      return 'warn';
+    case 'staging':
       return 'info';
     case 'test':
       return 'error';

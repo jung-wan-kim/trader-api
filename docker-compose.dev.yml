@@ -1,0 +1,39 @@
+version: '3.8'
+
+services:
+  trader-api-dev:
+    build:
+      context: .
+      target: builder
+      dockerfile: Dockerfile
+    container_name: trader-api-dev
+    ports:
+      - "${PORT:-3000}:3000"
+    environment:
+      - NODE_ENV=development
+      - PORT=3000
+    env_file:
+      - .env.development
+    volumes:
+      - .:/app:cached
+      - /app/node_modules
+      - ./logs:/app/logs:rw
+    restart: unless-stopped
+    networks:
+      - trader-network-dev
+    command: npm run dev
+    depends_on:
+      - redis-dev
+
+  redis-dev:
+    image: redis:7-alpine
+    container_name: trader-api-redis-dev
+    ports:
+      - "6380:6379"
+    networks:
+      - trader-network-dev
+    command: redis-server --appendonly yes
+
+networks:
+  trader-network-dev:
+    driver: bridge
