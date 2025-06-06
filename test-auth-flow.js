@@ -12,7 +12,7 @@ async function testAuthAndFunctions() {
   console.log('🧪 Supabase Auth & Edge Functions 테스트\n');
 
   // 1. 테스트 사용자 생성 또는 로그인
-  const testEmail = 'test@example.com';
+  const testEmail = 'trader-test@gmail.com';
   const testPassword = 'Test1234!@#$';
 
   console.log('1️⃣ 사용자 로그인 시도...');
