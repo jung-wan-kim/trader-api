@@ -1,5 +1,5 @@
-const { createClient } = require('@supabase/supabase-js');
-const logger = require('../utils/logger');
+import { createClient } from '@supabase/supabase-js';
+import logger from '../utils/logger.js';
 
 const supabaseUrl = process.env.SUPABASE_URL;
 const supabaseServiceKey = process.env.SUPABASE_SERVICE_KEY;
@@ -28,4 +28,5 @@ supabase
     logger.error('Database connection failed:', error);
   });
 
-module.exports = { supabase };
+export default supabase;
+export { supabase };

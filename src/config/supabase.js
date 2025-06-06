@@ -1,5 +1,5 @@
-const { createClient } = require('@supabase/supabase-js');
-const dotenv = require('dotenv');
+import { createClient } from '@supabase/supabase-js';
+import dotenv from 'dotenv';
 
 dotenv.config();
 
@@ -52,7 +52,7 @@ const verifySession = async (accessToken) => {
   }
 };
 
-module.exports = {
+export {
   supabase,
   supabaseAdmin,
   getUserFromToken,
