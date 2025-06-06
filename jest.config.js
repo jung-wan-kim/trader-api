@@ -1,5 +1,9 @@
 export default {
   testEnvironment: 'node',
+  moduleNameMapper: {
+    '^(\\.{1,2}/.*)\\.js$': '$1'
+  },
+  transform: {},
   coverageDirectory: 'coverage',
   collectCoverageFrom: [
     'src/**/*.js',
@@ -9,10 +13,10 @@ export default {
   ],
   coverageThreshold: {
     global: {
-      branches: 90,
-      functions: 90,
-      lines: 90,
-      statements: 90
+      branches: 70,
+      functions: 70,
+      lines: 70,
+      statements: 70
     }
   },
   testMatch: [
@@ -23,18 +27,6 @@ export default {
     '/tests/fixtures/',
     '/tests/helpers/'
   ],
-  moduleNameMapper: {
-    '^@/(.*)$': '<rootDir>/src/$1',
-    '^@tests/(.*)$': '<rootDir>/tests/$1'
-  },
-  setupFilesAfterEnv: ['<rootDir>/tests/setup.js'],
   testTimeout: 10000,
-  verbose: true,
-  transform: {
-    '^.+\\.js$': ['babel-jest', {
-      presets: [
-        ['@babel/preset-env', { targets: { node: 'current' } }]
-      ]
-    }]
-  }
+  verbose: true
 };

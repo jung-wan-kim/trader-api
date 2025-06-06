@@ -1,3 +1,4 @@
+import { jest } from '@jest/globals';
 import dotenv from 'dotenv';
 
 // Load test environment variables
@@ -21,12 +22,3 @@ global.console = {
   info: jest.fn(),
   debug: jest.fn(),
 };
-
-// Global test timeout
-jest.setTimeout(10000);
-
-// Clean up after all tests
-afterAll(async () => {
-  // Close any open handles
-  await new Promise(resolve => setTimeout(resolve, 500));
-});
