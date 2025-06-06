@@ -9,6 +9,14 @@
     "test": "jest",
     "test:watch": "jest --watch",
     "test:coverage": "jest --coverage",
+    "test:unit": "jest tests/unit --coverage",
+    "test:integration": "jest tests/integration --coverage",
+    "test:e2e": "jest tests/e2e --runInBand",
+    "test:performance": "jest tests/performance --runInBand --testTimeout=30000",
+    "test:security": "jest tests/security --runInBand",
+    "test:all": "npm run test:unit && npm run test:integration && npm run test:e2e && npm run test:performance && npm run test:security",
+    "test:ci": "jest --coverage --ci --watchAll=false --maxWorkers=4",
+    "test:coverage:report": "jest --coverage && open coverage/lcov-report/index.html",
     "lint": "eslint .",
     "format": "prettier --write ."
   },
@@ -48,7 +56,11 @@
     "supertest": "^6.3.4",
     "eslint": "^8.56.0",
     "prettier": "^3.2.4",
-    "@types/jest": "^29.5.11"
+    "@types/jest": "^29.5.11",
+    "@babel/core": "^7.23.7",
+    "@babel/preset-env": "^7.23.7",
+    "babel-jest": "^29.7.0",
+    "jest-environment-node": "^29.7.0"
   },
   "engines": {
     "node": ">=18.0.0"
