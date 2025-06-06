@@ -1,0 +1,68 @@
+{
+  "name": "trader-api",
+  "version": "1.0.0",
+  "description": "Backend API for Trader App - AI-powered stock recommendation service",
+  "type": "module",
+  "main": "dist/server.js",
+  "scripts": {
+    "start": "node dist/server.js",
+    "dev": "ts-node-dev --respawn --transpile-only --exit-child src/server.ts",
+    "dev:js": "nodemon src/server.js",
+    "build": "tsc",
+    "build:clean": "rm -rf dist && npm run build",
+    "watch": "tsc -w",
+    "test": "jest",
+    "test:watch": "jest --watch",
+    "test:coverage": "jest --coverage",
+    "lint": "eslint . --ext .ts,.tsx,.js,.jsx",
+    "lint:fix": "eslint . --ext .ts,.tsx,.js,.jsx --fix",
+    "format": "prettier --write \"src/**/*.{ts,tsx,js,jsx,json}\"",
+    "typecheck": "tsc --noEmit",
+    "migrate": "node scripts/migrate-to-typescript.js"
+  },
+  "keywords": [
+    "trading",
+    "stock",
+    "api",
+    "fintech"
+  ],
+  "author": "Trader App Team",
+  "license": "MIT",
+  "dependencies": {
+    "express": "^4.18.2",
+    "cors": "^2.8.5",
+    "dotenv": "^16.3.1",
+    "helmet": "^7.1.0",
+    "compression": "^1.7.4",
+    "express-rate-limit": "^7.1.5",
+    "joi": "^17.11.0",
+    "@supabase/supabase-js": "^2.39.3",
+    "axios": "^1.6.5",
+    "node-cache": "^5.1.2",
+    "winston": "^3.11.0",
+    "morgan": "^1.10.0",
+    "bcryptjs": "^2.4.3",
+    "jsonwebtoken": "^9.0.2",
+    "express-validator": "^7.0.1",
+    "uuid": "^9.0.1",
+    "ws": "^8.16.0",
+    "node-cron": "^3.0.3",
+    "ta-lib": "^0.11.0",
+    "dayjs": "^1.11.10"
+  },
+  "devDependencies": {
+    "nodemon": "^3.0.3",
+    "jest": "^29.7.0",
+    "supertest": "^6.3.4",
+    "eslint": "^8.56.0",
+    "prettier": "^3.2.4",
+    "@types/jest": "^29.5.11",
+    "@babel/core": "^7.23.7",
+    "@babel/preset-env": "^7.23.7",
+    "babel-jest": "^29.7.0",
+    "jest-environment-node": "^29.7.0"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}

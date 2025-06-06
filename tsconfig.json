@@ -1,0 +1,66 @@
+{
+  "compilerOptions": {
+    // 대상 JavaScript 버전
+    "target": "ES2022",
+    "lib": ["ES2022"],
+    "module": "NodeNext",
+    "moduleResolution": "NodeNext",
+    
+    // 출력 설정
+    "outDir": "./dist",
+    "rootDir": "./src",
+    
+    // 엄격한 타입 검사 (점진적 마이그레이션을 위해 일부 비활성화)
+    "strict": false,
+    "noImplicitAny": false,
+    "strictNullChecks": false,
+    "strictFunctionTypes": true,
+    "strictBindCallApply": true,
+    "strictPropertyInitialization": false,
+    "noImplicitThis": true,
+    "alwaysStrict": true,
+    
+    // 추가 검사
+    "noUnusedLocals": true,
+    "noUnusedParameters": true,
+    "noImplicitReturns": true,
+    "noFallthroughCasesInSwitch": true,
+    "noUncheckedIndexedAccess": true,
+    
+    // 모듈 해석
+    "esModuleInterop": true,
+    "allowSyntheticDefaultImports": true,
+    "resolveJsonModule": true,
+    "allowJs": true,
+    "checkJs": false,
+    
+    // 소스맵 및 선언 파일
+    "sourceMap": true,
+    "declaration": true,
+    "declarationMap": true,
+    
+    // 실험적 기능
+    "experimentalDecorators": true,
+    "emitDecoratorMetadata": true,
+    
+    // 기타 옵션
+    "forceConsistentCasingInFileNames": true,
+    "skipLibCheck": true,
+    "incremental": true,
+    "tsBuildInfoFile": ".tsbuildinfo"
+  },
+  "include": [
+    "src/**/*",
+    "tests/**/*"
+  ],
+  "exclude": [
+    "node_modules",
+    "dist",
+    "coverage",
+    "**/*.spec.ts"
+  ],
+  "ts-node": {
+    "esm": true,
+    "experimentalSpecifierResolution": "node"
+  }
+}
