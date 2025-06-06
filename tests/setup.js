@@ -3,22 +3,100 @@ const path = require('path');
 
 // Set environment variables for testing
 process.env.NODE_ENV = 'test';
-process.env.FINNHUB_API_KEY = 'test_key';
+process.env.FINNHUB_API_KEY = 'test_finnhub_key';
 process.env.SUPABASE_URL = 'https://test.supabase.co';
-process.env.SUPABASE_SERVICE_ROLE_KEY = 'test_key';
+process.env.SUPABASE_SERVICE_ROLE_KEY = 'test_service_key';
+process.env.SUPABASE_ANON_KEY = 'test_anon_key';
 process.env.FRONTEND_URL = 'http://localhost:3000';
 process.env.CACHE_TTL = '300';
+process.env.JWT_SECRET = 'test_jwt_secret';
+process.env.PORT = '3001';
 
-// Mock global console to reduce noise in tests
-global.console = {
-  ...console,
-  log: jest.fn(),
-  error: jest.fn(),
-  warn: jest.fn(),
-  info: jest.fn(),
+// 테스트 타임아웃 설정
+jest.setTimeout(15000);
+
+// Mock global console to reduce noise in tests (선택적)
+if (process.env.JEST_SILENT !== 'false') {
+  global.console = {
+    ...console,
+    log: jest.fn(),
+    error: jest.fn(),
+    warn: jest.fn(),
+    info: jest.fn(),
+    debug: jest.fn(),
+  };
+}
+
+// 테스트 데이터 초기화 함수
+global.setupTestData = () => {
+  return {
+    testUser: {
+      id: 'test-user-id-123',
+      email: 'test@example.com',
+      name: 'Test User',
+      investment_style: 'aggressive'
+    },
+    testPortfolio: {
+      id: 'test-portfolio-id-123',
+      user_id: 'test-user-id-123',
+      name: 'Test Portfolio',
+      initial_capital: 10000,
+      current_value: 12000,
+      cash_balance: 2000
+    },
+    testPosition: {
+      id: 'test-position-id-123',
+      portfolio_id: 'test-portfolio-id-123',
+      symbol: 'AAPL',
+      quantity: 10,
+      entry_price: 150.00,
+      status: 'open'
+    }
+  };
+};
+
+// 테스트 후 정리 함수
+global.cleanupTestData = () => {
+  jest.clearAllMocks();
+  jest.resetModules();
 };
 
 // Mock modules before they are imported
+jest.mock('../src/config/database.js', () => ({
+  supabase: {
+    from: jest.fn(() => ({
+      select: jest.fn(() => ({
+        eq: jest.fn(() => ({
+          single: jest.fn(),
+          order: jest.fn(() => ({
+            range: jest.fn()
+          }))
+        })),
+        order: jest.fn(() => ({
+          range: jest.fn()
+        })),
+        gte: jest.fn(),
+        filter: jest.fn()
+      })),
+      insert: jest.fn(() => ({
+        select: jest.fn(() => ({
+          single: jest.fn()
+        }))
+      })),
+      update: jest.fn(() => ({
+        eq: jest.fn(() => ({
+          select: jest.fn(() => ({
+            single: jest.fn()
+          }))
+        }))
+      })),
+      delete: jest.fn(() => ({
+        eq: jest.fn()
+      }))
+    }))
+  }
+}));
+
 jest.mock('../src/config/supabase.js', () => ({
   supabase: {
     auth: {
@@ -62,7 +140,7 @@ jest.mock('../src/config/supabase.js', () => ({
   verifySession: jest.fn()
 }));
 
-jest.mock('../src/utils/logger.js', () => ({
+jest.mock('../src/utils/logger.ts', () => ({
   info: jest.fn(),
   error: jest.fn(),
   warn: jest.fn(),

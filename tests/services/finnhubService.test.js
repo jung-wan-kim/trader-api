@@ -1,141 +1,216 @@
-const NodeCache = require('node-cache');
-const FinnhubService = require('../../src/services/finnhubService');
+// Mock axios first
+const mockAxios = {
+  create: jest.fn(() => ({
+    get: jest.fn()
+  }))
+};
+
+jest.mock('axios', () => mockAxios);
 
 // Mock NodeCache
-jest.mock('node-cache');
+const mockCache = {
+  get: jest.fn(),
+  set: jest.fn(),
+  del: jest.fn(),
+  keys: jest.fn()
+};
+
+jest.mock('node-cache', () => {
+  return jest.fn().mockImplementation(() => mockCache);
+});
 
 describe('FinnhubService', () => {
-  let service;
-  let mockCache;
+  let finnhubService;
+  let mockClient;
 
   beforeEach(() => {
-    mockCache = {
-      get: jest.fn(),
-      set: jest.fn(),
-      del: jest.fn(),
-      flushAll: jest.fn()
-    };
-    NodeCache.mockImplementation(() => mockCache);
+    cleanupTestData();
     
-    service = new FinnhubService();
+    // Reset all mocks
+    jest.clearAllMocks();
+    
+    // Mock axios client
+    mockClient = {
+      get: jest.fn()
+    };
+    mockAxios.create.mockReturnValue(mockClient);
+    
+    // Import service after mocks are set up
+    delete require.cache[require.resolve('../../src/services/finnhubService.js')];
+    finnhubService = require('../../src/services/finnhubService.js').default;
   });
 
   afterEach(() => {
-    jest.clearAllMocks();
+    cleanupTestData();
   });
 
-  describe('constructor', () => {
-    it('should initialize with API key and cache', () => {
-      expect(service.apiKey).toBeDefined();
-      expect(service.cache).toBeDefined();
-      expect(service.baseURL).toBe('https://finnhub.io/api/v1');
-    });
-  });
-
-  describe('static methods', () => {
-    it('should format candles data correctly', () => {
-      const candlesData = {
-        t: [1640995200, 1641081600],
-        o: [100, 105],
-        h: [110, 115],
-        l: [95, 100],
-        c: [105, 110],
-        v: [1000000, 1200000]
+  describe('quote()', () => {
+    it('실시간 주가 데이터를 가져와야 합니다', async () => {
+      const mockQuoteData = {
+        c: 150.25,   // current price
+        d: 2.50,     // change
+        dp: 1.69,    // percent change
+        h: 152.00,   // high
+        l: 148.50,   // low
+        o: 149.00,   // open
+        pc: 147.75,  // previous close
+        t: 1672531200
       };
 
-      const formatted = FinnhubService.formatCandles(candlesData);
+      mockCache.get.mockReturnValue(null); // No cache
+      mockClient.get.mockResolvedValue({ data: mockQuoteData });
 
-      expect(formatted).toHaveLength(2);
-      expect(formatted[0]).toEqual({
-        timestamp: 1640995200,
-        open: 100,
-        high: 110,
-        low: 95,
-        close: 105,
-        volume: 1000000
+      const result = await finnhubService.quote('AAPL');
+
+      expect(mockClient.get).toHaveBeenCalledWith('/quote', {
+        params: { symbol: 'AAPL' }
       });
+      expect(mockCache.set).toHaveBeenCalledWith('quote_AAPL', mockQuoteData);
+      expect(result).toEqual(mockQuoteData);
     });
 
-    it('should handle empty candles data', () => {
-      const emptyCandlesData = {
-        t: [],
-        o: [],
-        h: [],
-        l: [],
-        c: [],
-        v: []
-      };
-
-      const formatted = FinnhubService.formatCandles(emptyCandlesData);
-
-      expect(formatted).toEqual([]);
-    });
-
-    it('should handle missing candles data', () => {
-      const formatted = FinnhubService.formatCandles(null);
-      expect(formatted).toEqual([]);
-    });
-
-    it('should calculate period from date correctly', () => {
-      const date = new Date('2024-01-15');
-      const period = FinnhubService.getPeriodFromDate(date);
-
-      expect(period).toMatch(/^\d+$/);
-      expect(parseInt(period)).toBeGreaterThan(0);
-    });
-
-    it('should handle invalid date for period calculation', () => {
-      const period = FinnhubService.getPeriodFromDate('invalid');
-      expect(period).toBe('0');
-    });
-  });
-
-  describe('cache operations', () => {
-    it('should check cache before making API call', async () => {
-      const cachedData = { symbol: 'AAPL', price: 150 };
+    it('캐시된 데이터가 있으면 캐시에서 반환해야 합니다', async () => {
+      const cachedData = { c: 150.25, cached: true };
       mockCache.get.mockReturnValue(cachedData);
 
-      // Simular uma chamada que usa cache
-      const cacheKey = 'test-key';
-      const result = service.cache.get(cacheKey);
+      const result = await finnhubService.quote('AAPL');
 
-      expect(mockCache.get).toHaveBeenCalledWith(cacheKey);
+      expect(mockClient.get).not.toHaveBeenCalled();
       expect(result).toEqual(cachedData);
     });
 
-    it('should set cache with TTL', () => {
-      const data = { symbol: 'AAPL', price: 150 };
-      const cacheKey = 'test-key';
-      const ttl = 300; // 5 minutes
+    it('API 오류 시 에러를 throw해야 합니다', async () => {
+      const error = new Error('API Error');
+      mockCache.get.mockReturnValue(null);
+      mockClient.get.mockRejectedValue(error);
 
-      service.cache.set(cacheKey, data, ttl);
-
-      expect(mockCache.set).toHaveBeenCalledWith(cacheKey, data, ttl);
+      await expect(finnhubService.quote('INVALID')).rejects.toThrow('API Error');
     });
   });
 
-  describe('error handling', () => {
-    it('should handle missing API key', () => {
-      const originalApiKey = process.env.FINNHUB_API_KEY;
-      delete process.env.FINNHUB_API_KEY;
+  describe('getCandles()', () => {
+    it('캔들스틱 데이터를 가져와야 합니다', async () => {
+      const mockCandleData = {
+        s: 'ok',
+        t: [1672531200, 1672617600], // timestamps
+        o: [149.00, 151.00],         // open prices
+        h: [152.00, 153.00],         // high prices
+        l: [148.50, 150.50],         // low prices
+        c: [150.25, 152.75],         // close prices
+        v: [1000000, 1200000]        // volumes
+      };
 
-      const newService = new FinnhubService();
-      expect(newService.apiKey).toBeUndefined();
+      const expectedCandles = [
+        {
+          timestamp: 1672531200,
+          open: 149.00,
+          high: 152.00,
+          low: 148.50,
+          close: 150.25,
+          volume: 1000000
+        },
+        {
+          timestamp: 1672617600,
+          open: 151.00,
+          high: 153.00,
+          low: 150.50,
+          close: 152.75,
+          volume: 1200000
+        }
+      ];
 
-      process.env.FINNHUB_API_KEY = originalApiKey;
+      mockCache.get.mockReturnValue(null);
+      mockClient.get.mockResolvedValue({ data: mockCandleData });
+
+      const result = await finnhubService.getCandles('AAPL', 'D', 1672531200, 1672617600);
+
+      expect(mockClient.get).toHaveBeenCalledWith('/stock/candle', {
+        params: {
+          symbol: 'AAPL',
+          resolution: 'D',
+          from: 1672531200,
+          to: 1672617600
+        }
+      });
+      expect(result).toEqual(expectedCandles);
+    });
+
+    it('데이터가 없는 경우 빈 배열을 반환해야 합니다', async () => {
+      const mockCandleData = { s: 'no_data' };
+      
+      mockCache.get.mockReturnValue(null);
+      mockClient.get.mockResolvedValue({ data: mockCandleData });
+
+      const result = await finnhubService.getCandles('INVALID', 'D', 1672531200, 1672617600);
+
+      expect(result).toEqual([]);
     });
   });
 
-  describe('helper methods', () => {
-    it('should build correct URL with parameters', () => {
-      const baseURL = 'https://finnhub.io/api/v1';
-      const endpoint = '/quote';
-      const symbol = 'AAPL';
-      const expectedURL = `${baseURL}${endpoint}?symbol=${symbol}&token=${service.apiKey}`;
+  describe('searchStocks()', () => {
+    it('주식 검색 결과를 반환해야 합니다', async () => {
+      const mockSearchData = {
+        result: [
+          {
+            description: 'Apple Inc',
+            displaySymbol: 'AAPL',
+            symbol: 'AAPL',
+            type: 'Common Stock'
+          }
+        ]
+      };
 
-      // Verificar que a URL seria construída corretamente
-      expect(service.baseURL).toBe(baseURL);
-      expect(service.apiKey).toBeDefined();
+      mockClient.get.mockResolvedValue({ data: mockSearchData });
+
+      const result = await finnhubService.searchStocks('AAPL');
+
+      expect(mockClient.get).toHaveBeenCalledWith('/search', {
+        params: { q: 'AAPL' }
+      });
+      expect(result).toEqual(mockSearchData.result);
+    });
+  });
+
+  describe('formatCandles()', () => {
+    it('원시 캔들 데이터를 올바른 형식으로 변환해야 합니다', () => {
+      const rawData = {
+        t: [1672531200, 1672617600],
+        o: [149.00, 151.00],
+        h: [152.00, 153.00],
+        l: [148.50, 150.50],
+        c: [150.25, 152.75],
+        v: [1000000, 1200000]
+      };
+
+      const expected = [
+        {
+          timestamp: 1672531200,
+          open: 149.00,
+          high: 152.00,
+          low: 148.50,
+          close: 150.25,
+          volume: 1000000
+        },
+        {
+          timestamp: 1672617600,
+          open: 151.00,
+          high: 153.00,
+          low: 150.50,
+          close: 152.75,
+          volume: 1200000
+        }
+      ];
+
+      const result = finnhubService.formatCandles(rawData);
+      expect(result).toEqual(expected);
+    });
+  });
+
+  describe('getDateString()', () => {
+    it('현재 날짜의 문자열을 반환해야 합니다', () => {
+      const today = new Date().toISOString().split('T')[0];
+      const result = finnhubService.getDateString();
+      expect(result).toBe(today);
     });
   });
 });
