@@ -1,7 +1,7 @@
-const express = require('express');
-const portfolioController = require('../controllers/portfolioController.js');
-const { authenticate, authorize } = require('../middleware/auth.js');
-const { validatePortfolio, validatePosition, validatePositionUpdate, validateClosePosition } = require('../validators/portfolio.js');
+import express from 'express';
+import portfolioController from '../controllers/portfolioController.js';
+import { authenticate, authorize } from '../middleware/auth.js';
+import { validatePortfolio, validatePosition, validatePositionUpdate, validateClosePosition } from '../validators/portfolio.js';
 
 const router = express.Router();
 
@@ -27,4 +27,4 @@ router.post('/positions/:id/close', validateClosePosition, portfolioController.c
 // Trading history
 router.get('/:portfolioId/history', portfolioController.getTradingHistory);
 
-module.exports = router;
+export default router;
