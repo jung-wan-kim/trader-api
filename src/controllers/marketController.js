@@ -541,3 +541,15 @@ module.exports = {
   getEarningsCalendar,
   getMarketStatus
 };
+
+export default {
+  getQuote,
+  getCandles,
+  searchStocks,
+  getNews,
+  getCompanyProfile,
+  getTechnicalIndicators,
+  getMarketSentiment,
+  getEarningsCalendar,
+  getMarketStatus
+};

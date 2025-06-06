@@ -826,3 +826,17 @@ module.exports = {
   closePosition,
   getTradingHistory
 };
+
+export default {
+  getPortfolios,
+  getPortfolioById,
+  createPortfolio,
+  updatePortfolio,
+  deletePortfolio,
+  getPortfolioPerformance,
+  getPositions,
+  addPosition,
+  updatePosition,
+  closePosition,
+  getTradingHistory
+};

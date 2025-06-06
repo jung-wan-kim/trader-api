@@ -405,3 +405,15 @@ module.exports = {
   requestPasswordReset,
   deleteAccount
 };
+
+export default {
+  register,
+  login,
+  refreshToken,
+  logout,
+  getProfile,
+  updateProfile,
+  changePassword,
+  requestPasswordReset,
+  deleteAccount
+};

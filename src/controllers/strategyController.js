@@ -471,3 +471,12 @@ module.exports = {
   getStrategyPerformance,
   getUserStrategies
 };
+
+export default {
+  getStrategies,
+  getStrategyById,
+  subscribeToStrategy,
+  unsubscribeFromStrategy,
+  getStrategyPerformance,
+  getUserStrategies
+};

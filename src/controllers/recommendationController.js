@@ -533,3 +533,13 @@ module.exports = {
   toggleLike,
   getRecommendationPerformance
 };
+
+export default {
+  getRecommendations,
+  getRecommendationById,
+  getRecommendationsByStrategy,
+  getLiveRecommendations,
+  followRecommendation,
+  toggleLike,
+  getRecommendationPerformance
+};

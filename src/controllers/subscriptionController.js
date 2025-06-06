@@ -661,3 +661,14 @@ module.exports = {
   getSubscriptionHistory,
   updatePaymentMethod
 };
+
+export default {
+  getPlans,
+  getCurrentSubscription,
+  createSubscription,
+  upgradeSubscription,
+  cancelSubscription,
+  getUsage,
+  getSubscriptionHistory,
+  updatePaymentMethod
+};
