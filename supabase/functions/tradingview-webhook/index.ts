@@ -40,8 +40,23 @@ serve(async (req) => {
       )
     }
 
-    // Get the authorization token from headers
-    const authHeader = req.headers.get('Authorization')
+    // Get webhook secret from URL parameters for TradingView compatibility
+    const url = new URL(req.url)
+    const webhookSecret = url.searchParams.get('secret')
+    const expectedSecret = Deno.env.get('TRADINGVIEW_WEBHOOK_SECRET')
+    
+    // Validate webhook secret
+    if (!expectedSecret || webhookSecret !== expectedSecret) {
+      console.error('Invalid webhook secret:', webhookSecret ? 'mismatch' : 'missing')
+      return new Response(
+        JSON.stringify({ error: 'Unauthorized' }),
+        { 
+          status: 401, 
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+        }
+      )
+    }
+
     const supabaseUrl = Deno.env.get('SUPABASE_URL')
     const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')
 

@@ -70,23 +70,20 @@ Supabase Dashboard의 SQL Editor에서 다음 마이그레이션 파일을 실�
 
 ## Edge Function 배포
 
-### 1. 기본 버전 배포 (보안 설정 없음)
+### 1. 환경 변수 설정
+
+```bash
+# 웹훅 시크릿 설정 (필수)
+supabase secrets set TRADINGVIEW_WEBHOOK_SECRET="your-secret-key-here"
+```
+
+### 2. Edge Function 배포
 
 ```bash
 # Edge Function 배포
 supabase functions deploy tradingview-webhook
 
 # 환경 변수는 자동으로 설정됨 (SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY)
-```
-
-### 2. 보안 강화 버전 배포 (권장)
-
-```bash
-# Edge Function 배포
-supabase functions deploy tradingview-webhook-secure
-
-# 웹훅 시크릿 설정 (선택사항)
-supabase secrets set TRADINGVIEW_WEBHOOK_SECRET="your-secret-key-here"
 ```
 
 ### 3. 배포 확인
@@ -104,14 +101,10 @@ supabase functions logs tradingview-webhook
 배포 후 웹훅 URL은 다음과 같습니다:
 
 ```
-https://[YOUR-PROJECT-REF].supabase.co/functions/v1/tradingview-webhook
+https://[YOUR-PROJECT-REF].supabase.co/functions/v1/tradingview-webhook?secret=your-secret-key-here
 ```
 
-또는 (보안 버전)
-
-```
-https://[YOUR-PROJECT-REF].supabase.co/functions/v1/tradingview-webhook-secure
-```
+⚠️ **중요**: URL에 반드시 `?secret=your-secret-key-here` 파라미터를 포함해야 합니다.
 
 ## TradingView 설정
 
@@ -119,7 +112,7 @@ https://[YOUR-PROJECT-REF].supabase.co/functions/v1/tradingview-webhook-secure
 
 1. TradingView 차트에서 알림 생성
 2. "Webhook URL" 옵션 활성화
-3. URL 입력: `https://[YOUR-PROJECT-REF].supabase.co/functions/v1/tradingview-webhook`
+3. URL 입력: `https://[YOUR-PROJECT-REF].supabase.co/functions/v1/tradingview-webhook?secret=your-secret-key-here`
 
 ### 2. 메시지 템플릿 설정
 
@@ -143,18 +136,29 @@ https://[YOUR-PROJECT-REF].supabase.co/functions/v1/tradingview-webhook-secure
 }
 ```
 
-### 3. 보안 버전 사용 시 헤더 설정
+### 3. 보안 설정 (URL 파라미터 방식)
 
-보안 강화 버전 사용 시, 웹훅 요청에 헤더 추가가 필요합니다.
-(참고: TradingView는 커스텀 헤더를 지원하지 않으므로, 프록시 서버를 사용하거나 시크릿 검증을 비활성화해야 합니다)
+TradingView는 커스텀 헤더를 지원하지 않으므로, URL 파라미터로 인증합니다:
+
+```
+https://[YOUR-PROJECT-REF].supabase.co/functions/v1/tradingview-webhook?secret=your-secret-key-here
+```
+
+1. Supabase에서 시크릿 설정:
+   ```bash
+   supabase secrets set TRADINGVIEW_WEBHOOK_SECRET="your-secret-key-here"
+   ```
+
+2. TradingView 웹훅 URL에 secret 파라미터 추가:
+   - Webhook URL: `https://[YOUR-PROJECT-REF].supabase.co/functions/v1/tradingview-webhook?secret=your-secret-key-here`
 
 ## 테스트
 
 ### 1. cURL을 사용한 테스트
 
 ```bash
-# 기본 버전 테스트
-curl -X POST https://[YOUR-PROJECT-REF].supabase.co/functions/v1/tradingview-webhook \
+# URL 파라미터 방식 테스트
+curl -X POST 'https://[YOUR-PROJECT-REF].supabase.co/functions/v1/tradingview-webhook?secret=your-secret-key-here' \
   -H "Content-Type: application/json" \
   -d '{
     "symbol": "AAPL",
@@ -171,23 +175,21 @@ curl -X POST https://[YOUR-PROJECT-REF].supabase.co/functions/v1/tradingview-web
     }
   }'
 
-# 보안 버전 테스트
-curl -X POST https://[YOUR-PROJECT-REF].supabase.co/functions/v1/tradingview-webhook-secure \
+# 로컬 테스트
+supabase functions serve tradingview-webhook --env-file .env.local
+
+curl -X POST 'http://localhost:54321/functions/v1/tradingview-webhook?secret=your-secret-key-here' \
   -H "Content-Type: application/json" \
-  -H "X-Webhook-Secret: your-secret-key-here" \
   -d '{
     "symbol": "AAPL",
     "action": "buy",
     "price": 150.25,
     "volume": 1000000,
     "text": "Test buy signal",
-    "time": "'$(date -u +"%Y-%m-%d %H:%M:%S")'",
+    "time": "2025-01-17 10:30:00",
     "strategy": "Test Strategy",
     "timeframe": "1h",
-    "indicators": {
-      "macd": 0.5,
-      "rsi": 65
-    }
+    "indicators": {}
   }'
 ```
 
@@ -204,10 +206,11 @@ supabase functions logs tradingview-webhook --tail
 
 ## 보안 설정
 
-### 1. 웹훅 시크릿 (보안 버전)
+### 1. 웹훅 시크릿 (URL 파라미터)
 
 - 환경 변수 `TRADINGVIEW_WEBHOOK_SECRET` 설정
-- 요청 시 `X-Webhook-Secret` 헤더에 동일한 값 전송
+- TradingView 웹훅 URL에 `?secret=your-secret-key-here` 파라미터 추가
+- 모든 요청에서 secret 파라미터 검증
 
 ### 2. Rate Limiting
 
@@ -230,8 +233,9 @@ supabase functions logs tradingview-webhook --tail
 
 ### 1. 401 Unauthorized
 
-- 웹훅 시크릿 확인
-- 헤더 이름 확인 (`X-Webhook-Secret`)
+- URL의 secret 파라미터 확인
+- 환경 변수 `TRADINGVIEW_WEBHOOK_SECRET` 값과 일치하는지 확인
+- URL 형식 확인: `?secret=your-secret-key-here`
 
 ### 2. 429 Rate Limit Exceeded
 
