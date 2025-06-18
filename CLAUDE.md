@@ -1,440 +1,342 @@
 # CLAUDE.md
 
-This file provides comprehensive guidance to Claude Code (claude.ai/code) when working with the Trader API codebase. This document serves as the primary reference for understanding project architecture, development workflows, and best practices.
+This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
 ## Project Overview
 
-**Trader API** is an AI-powered stock recommendation backend that implements proven trading strategies from legendary investors:
+This is an AI-powered stock recommendation backend API that implements legendary traders' strategies:
+- **Jesse Livermore**: Trend following strategy
+- **Larry Williams**: Short-term momentum strategy  
+- **Stan Weinstein**: Stage analysis strategy
 
-- **Jesse Livermore**: Trend following and momentum-based strategies
-- **Larry Williams**: Short-term momentum with volatility indicators  
-- **Stan Weinstein**: Stage analysis for market timing
-
-### Technology Stack
-- **Runtime**: Node.js 18+ with TypeScript support
-- **Framework**: Express.js with middleware architecture
-- **Database**: Supabase (PostgreSQL + Auth + Real-time + Storage)
-- **External APIs**: Finnhub for market data
-- **Authentication**: JWT-based with Supabase Auth
-- **Testing**: Jest + Supertest
-- **Documentation**: Swagger/OpenAPI 3.0
-
-## Quick Start
-
-### Prerequisites
-```bash
-# Required tools
-node --version  # >= 18.0.0
-npm --version   # >= 8.0.0
-
-# Required accounts
-- Supabase account with project
-- Finnhub API key
-```
-
-### Initial Setup
-```bash
-# Install dependencies
-npm install
-
-# Set up environment
-cp .env.example .env
-# Edit .env with your credentials
-
-# Run in development
-npm run dev
-```
+Built with Node.js, Express, TypeScript (partial migration), and Supabase as the database.
 
 ## Essential Commands
 
 ### Development
 ```bash
-npm run dev          # Start with nodemon (auto-reload)
+npm run dev          # Start development server with nodemon
 npm run dev:js       # JavaScript-only development mode
 npm run build        # Compile TypeScript to JavaScript
 npm run build:clean  # Clean build (removes dist/)
 npm run watch        # Watch mode for TypeScript compilation
-npm start            # Production mode (requires build)
+npm start            # Production mode (node dist/server.js)
 ```
 
 ### Testing
 ```bash
 npm test                    # Run all tests
-npm run test:coverage       # Generate coverage report
-npm run test:unit          # Unit tests only
-npm run test:integration   # Integration tests only
-npm run test:controllers   # Controller tests
-npm run test:services      # Service tests
-npm run test:middleware    # Middleware tests
+npm run test:watch          # Run tests in watch mode
+npm run test:coverage       # Run tests with coverage report
+npm run test:unit          # Run unit tests only
+npm run test:integration   # Run integration tests
+npm run test:controllers   # Test controllers specifically
+npm run test:services      # Test services specifically
+npm run test:middleware    # Test middleware specifically
 npm run test:security      # Security-focused tests
-npm run test:verbose       # Detailed test output
-npm run test:silent        # Minimal output
+npm run test:silent        # Run with JEST_SILENT=false
+npm run test:verbose       # Detailed output with no cache
 ```
 
 ### Code Quality
 ```bash
-npm run lint         # Run ESLint
-npm run lint:fix     # Auto-fix ESLint issues
-npm run format       # Format with Prettier
-npm run typecheck    # TypeScript type checking
+npm run lint         # Run ESLint on .ts,.tsx,.js,.jsx files
+npm run lint:fix     # Fix ESLint issues automatically
+npm run format       # Format code with Prettier
+npm run typecheck    # TypeScript type checking (tsc --noEmit)
 ```
+
+**Important**: Always run `npm run typecheck` before committing TypeScript changes.
 
 ### Documentation
 ```bash
-npm run docs:generate  # Generate docs from code
-npm run docs:serve     # Serve docs locally
-npm run docs:build     # Build docs for production
+npm run docs:generate  # Generate documentation
+npm run docs:serve     # Serve documentation locally (Jekyll)
+npm run docs:build     # Build documentation (Jekyll)
 ```
 
-## Project Structure
+## Architecture Overview
 
+### Directory Structure
 ```
 trader-api/
 ├── src/                      # Source code
 │   ├── config/              # Configuration modules
-│   │   ├── database.js      # Database connection
-│   │   ├── environment.js   # Environment variables
-│   │   ├── supabase.js/ts   # Supabase client
-│   │   └── swagger.js       # API documentation
-│   ├── controllers/         # Request handlers
+│   │   ├── database.js      # Database connection config
+│   │   ├── environment.js   # Environment variable management
+│   │   ├── supabase.js/ts   # Supabase client (mixed JS/TS)
+│   │   └── swagger.js       # Swagger API documentation config
+│   ├── controllers/         # Request handlers (mixed JS/TS)
 │   │   ├── authController.js/ts
 │   │   ├── marketController.js
 │   │   ├── portfolioController.js
 │   │   ├── recommendationController.js
 │   │   ├── strategyController.js
 │   │   └── subscriptionController.js
-│   ├── middleware/          # Express middleware
+│   ├── middleware/          # Express middleware (mixed JS/TS)
 │   │   ├── auth.js/ts       # JWT authentication
 │   │   ├── errorHandler.js  # Global error handling
 │   │   ├── rateLimiter.js/ts # API rate limiting
-│   │   └── security.js      # Security headers
+│   │   └── security.js      # Security headers (Helmet)
 │   ├── models/              # Database schemas
-│   │   ├── schema.sql       # Database structure
-│   │   └── seed.sql         # Initial data
-│   ├── routes/              # API routes
+│   │   ├── schema.sql       # Main database schema
+│   │   └── seed.sql         # Seed data for development
+│   ├── routes/              # API route definitions (mixed JS/TS)
 │   │   ├── auth.js/ts       # /api/auth/*
+│   │   ├── health.js        # /health endpoint
 │   │   ├── market.ts        # /api/market/*
 │   │   ├── portfolio.ts     # /api/portfolio/*
 │   │   ├── recommendations.ts # /api/recommendations/*
 │   │   ├── strategies.ts    # /api/strategies/*
 │   │   └── subscription.js  # /api/subscription/*
-│   ├── services/            # External integrations
-│   │   └── finnhubService.js # Market data API
-│   ├── types/               # TypeScript definitions
+│   ├── services/            # External service integrations
+│   │   └── finnhubService.js # Finnhub API for market data
+│   ├── types/               # TypeScript type definitions
 │   │   ├── index.ts         # Main type exports
 │   │   ├── services.ts      # Service interfaces
-│   │   └── *.d.ts           # Type declarations
+│   │   ├── environment.d.ts # Environment variable types
+│   │   ├── express.d.ts     # Express augmentations
+│   │   └── logger.d.ts      # Logger types
 │   ├── utils/               # Utility functions
-│   │   ├── logger.ts        # Winston logger
+│   │   ├── logger.ts        # Winston logger setup
 │   │   ├── metrics.js       # Performance metrics
 │   │   └── secrets.js       # Secret management
-│   ├── validators/          # Input validation
-│   │   └── *.js             # Joi validators
-│   └── server.js/ts         # Application entry point
+│   ├── validators/          # Input validation (all JS)
+│   │   ├── auth.js
+│   │   ├── market.js
+│   │   ├── portfolio.js
+│   │   ├── recommendation.js
+│   │   ├── strategy.js
+│   │   └── subscription.js
+│   ├── server.js            # JavaScript entry point
+│   └── server.ts            # TypeScript entry point
 ├── supabase/                # Supabase configuration
+│   ├── config.toml          # Supabase project config
 │   ├── functions/           # Edge Functions
-│   │   ├── market-data/     # Market data processing
-│   │   ├── portfolio-management/
-│   │   ├── trading-signals/ # Strategy signals
-│   │   └── tradingview-webhook/ # TradingView integration
+│   │   ├── market-data/     # Real-time market data
+│   │   ├── market-data-simple/ # Simplified market endpoint
+│   │   ├── portfolio-management/ # Portfolio operations
+│   │   ├── trading-signals/ # Strategy-based signals
+│   │   ├── tradingview-webhook/ # TradingView integration
+│   │   └── tradingview-webhook-secure/ # Secure webhook
 │   └── migrations/          # Database migrations
+│       ├── 001_initial_schema.sql
+│       ├── 20240607000000_initial_serverless_schema.sql
+│       ├── 20240607000001_advanced_rls_policies.sql
+│       └── 20250117_tradingview_webhooks.sql
 ├── tests/                   # Test files
-│   ├── controllers/         # Controller tests
-│   ├── integration/         # Integration tests
-│   ├── middleware/          # Middleware tests
-│   ├── services/            # Service tests
-│   └── setup.js/ts          # Test configuration
-├── docs/                    # Documentation
-│   ├── ARCHITECTURE.md      # System design
-│   ├── DEVELOPER_GUIDE.md   # Development guide
-│   └── openapi.yaml         # API specification
-└── scripts/                 # Utility scripts
-    ├── deploy-edge-functions.js
-    └── generate-docs.js
+├── docs/                    # Project documentation
+│   ├── ARCHITECTURE.md
+│   ├── DEVELOPER_GUIDE.md
+│   ├── PRD.md
+│   ├── TRADINGVIEW_WEBHOOK_GUIDE.md
+│   └── USER_MANUAL.md
+└── flutter_integration/     # Flutter app integration guides
 ```
 
-## Architecture Overview
+### Key Design Patterns
+1. **MVC Architecture**: Clear separation between Models, Views (routes), and Controllers
+2. **Middleware Chain**: Security → Authentication → Validation → Rate Limiting → Controller
+3. **Service Layer**: External API calls abstracted in services
+4. **Type Safety**: Progressive TypeScript migration (mixed JS/TS files)
+5. **Error Handling**: Centralized error middleware with consistent response format
 
-### Design Patterns
+### API Authentication
+- JWT-based authentication with refresh tokens
+- Supabase Auth integration
+- All protected routes require valid JWT in Authorization header
+- Token expiry: 1 hour (access), 7 days (refresh)
 
-1. **MVC Architecture**
-   ```
-   Routes → Middleware → Controllers → Services → Database
-   ```
+### Database Strategy
+- **Primary Database**: Supabase PostgreSQL
+- **Edge Functions**: Serverless compute for:
+  - `market-data`: Real-time stock quotes and candles
+  - `portfolio-management`: Portfolio CRUD operations
+  - `trading-signals`: Strategy-based buy/sell signals
+  - `tradingview-webhook`: Webhook receiver for TradingView alerts
+- **Migrations**: Timestamped SQL files in `supabase/migrations/`
+- **RLS (Row Level Security)**: Enabled for all user tables
 
-2. **Middleware Pipeline**
-   ```
-   Request → Security → Auth → Validation → RateLimit → Controller → Response
-   ```
+### External Integrations
+- **Finnhub API**: Real-time market data and financial metrics
+- **Technical Analysis**: Built-in indicators (moving averages, RSI, etc.)
+- **WebSocket Support**: For real-time price updates
+- **TradingView**: Webhook integration for custom alerts
 
-3. **Service Layer Pattern**
-   - Controllers handle HTTP logic
-   - Services contain business logic
-   - Clear separation of concerns
+### Subscription Tiers
+1. **Basic (Free)**: 1 recommendation/week, basic indicators
+2. **Premium ($29/month)**: 5 recommendations/week, advanced indicators
+3. **Professional ($99/month)**: Unlimited recommendations, all features, priority support
 
-4. **Error Handling**
-   - Centralized error middleware
-   - Consistent error response format
-   - Proper HTTP status codes
+### Performance Requirements
+- API response time: < 200ms for most endpoints
+- Real-time data: < 500ms latency
+- Batch operations: Optimized for portfolios up to 100 positions
+- Cache TTL: 60s for quotes, 5m for historical data
 
-### Database Architecture
-
-#### Core Tables
-- **users**: User accounts and profiles
-- **portfolios**: User investment portfolios
-- **positions**: Stock positions in portfolios
-- **recommendations**: AI-generated recommendations
-- **strategies**: Trading strategy definitions
-- **subscriptions**: User subscription tiers
-
-#### Supabase Features Used
-- **Authentication**: Built-in auth with JWT
-- **Row Level Security**: Fine-grained access control
-- **Real-time**: Live data subscriptions
-- **Edge Functions**: Serverless compute
-
-### API Design
-
-#### RESTful Endpoints
-```
-/api/auth
-  POST   /register         # Create account
-  POST   /login           # Authenticate
-  POST   /refresh         # Refresh token
-  GET    /profile         # Get user profile
-  PUT    /profile         # Update profile
-
-/api/market
-  GET    /quote/:symbol   # Real-time quote
-  GET    /candles/:symbol # Historical data
-  GET    /search          # Symbol search
-
-/api/recommendations
-  GET    /                # List recommendations
-  GET    /:id            # Get specific
-  POST   /:id/feedback   # User feedback
-
-/api/portfolio
-  GET    /               # List portfolios
-  POST   /               # Create portfolio
-  GET    /:id/positions  # List positions
-  POST   /:id/positions  # Add position
-```
-
-#### Response Format
-```json
-// Success
-{
-  "data": { ... },
-  "message": "Success",
-  "timestamp": "2024-01-01T00:00:00Z"
-}
-
-// Error
-{
-  "error": "ValidationError",
-  "message": "Invalid input",
-  "code": "VALIDATION_ERROR",
-  "details": { ... }
-}
-```
+### Testing Strategy
+- **Unit Tests**: Services, utilities, pure functions
+- **Integration Tests**: API endpoints with database
+- **Security Tests**: Authentication flows, input validation
+- **Coverage Goals**: 70% overall, 80% for critical paths
+- **Test Database**: Separate Supabase project for testing
 
 ## Development Workflow
 
-### TypeScript Migration
-The project is partially migrated to TypeScript:
-- **Completed**: Core types, auth, rate limiter
-- **In Progress**: Controllers, services
-- **JavaScript**: Legacy code still functional
+### TypeScript Migration Status
+- **Completed**: Core types, logger, auth middleware, rate limiter
+- **In Progress**: Controllers (auth completed), config files
+- **Remaining**: Services, validators, remaining controllers
+- **Note**: Always check for both .js and .ts versions of files
+
+### Pre-commit Checklist
+1. Run `npm run typecheck` for TypeScript validation
+2. Run `npm test` to ensure all tests pass
+3. Run `npm run lint:fix` to fix code style issues
+4. Update tests for any functional changes
+5. Update API documentation if endpoints changed
 
 ### Git Workflow
 ```bash
-# Feature development
+# Feature branch
 git checkout -b feature/your-feature
-npm run typecheck
-npm test
-git commit -m "feat: description"
 
-# Before pushing
+# After changes
+npm run typecheck
+npm run test
 npm run lint:fix
-npm run test:coverage
+
+# Commit with conventional format
+git commit -m "feat: add new trading strategy"
+# Types: feat, fix, docs, style, refactor, test, chore
+
+# Push and create PR
+git push origin feature/your-feature
 ```
 
-### Testing Strategy
+## Environment Variables
 
-1. **Unit Tests**: Pure functions and utilities
-2. **Integration Tests**: API endpoints
-3. **Coverage Goals**: 
-   - Global: 70%+
-   - Critical paths: 80%+
-
-### Code Style
-- ESLint for linting
-- Prettier for formatting
-- TypeScript strict mode
-- Consistent error handling
-
-## Environment Configuration
-
-### Required Variables
-```env
-# Supabase
+Required environment variables (see .env.example):
+```bash
+# Supabase Configuration
 SUPABASE_URL=https://your-project.supabase.co
 SUPABASE_ANON_KEY=your-anon-key
-SUPABASE_SERVICE_KEY=your-service-key  # Admin operations
+SUPABASE_SERVICE_ROLE_KEY=your-service-role-key  # For admin operations
 
 # External APIs
-FINNHUB_API_KEY=your-finnhub-key
+FINNHUB_API_KEY=your-finnhub-api-key
 
 # Security
-JWT_SECRET=your-jwt-secret
-ENCRYPTION_KEY=your-encryption-key
+JWT_SECRET=your-jwt-secret-min-32-chars
+ENCRYPTION_KEY=your-encryption-key  # Optional
 
-# Server
+# Server Configuration
 PORT=3000
-NODE_ENV=development
+NODE_ENV=development  # development, production, test
+
+# Rate Limiting
+RATE_LIMIT_WINDOW=15  # minutes
+RATE_LIMIT_MAX=100    # requests per window
+
+# Optional
+LOG_LEVEL=info        # debug, info, warn, error
+CORS_ORIGIN=http://localhost:3001  # Frontend URL
 ```
 
-### Environment-Specific Config
-- **Development**: Local Supabase, verbose logging
-- **Staging**: Test Supabase project, limited logging
-- **Production**: Production Supabase, error logging only
-
-## Common Development Tasks
+## Common Tasks
 
 ### Adding a New Trading Strategy
-
-1. **Define Strategy Type** (`src/types/strategies.ts`)
+1. Define strategy logic in `src/controllers/strategyController.js`
+2. Add strategy types in `src/types/index.ts`:
    ```typescript
    export interface NewStrategy {
-     id: string;
      name: string;
-     parameters: StrategyParams;
+     parameters: {
+       period: number;
+       threshold: number;
+     };
    }
    ```
+3. Update recommendation engine in `src/controllers/recommendationController.js`
+4. Create validator in `src/validators/strategy.js`
+5. Add Edge Function if needed in `supabase/functions/trading-signals/`
+6. Write tests in `tests/unit/strategies/`
+7. Update Swagger documentation
 
-2. **Implement Logic** (`src/controllers/strategies/newStrategy.js`)
+### Modifying API Endpoints
+1. Check for existing route in `src/routes/` (both .js and .ts)
+2. Update/create controller in `src/controllers/`
+3. Add validation in `src/validators/` (currently all .js)
+4. Update Swagger annotations in controller:
    ```javascript
-   export const calculateNewStrategy = async (symbol, params) => {
-     // Implementation
-   };
+   /**
+    * @swagger
+    * /api/endpoint:
+    *   get:
+    *     summary: Description
+    *     tags: [Category]
+    *     security:
+    *       - bearerAuth: []
+    */
    ```
-
-3. **Add Route** (`src/routes/strategies.js`)
-   ```javascript
-   router.get('/new-strategy/:symbol', newStrategyHandler);
-   ```
-
-4. **Write Tests** (`tests/controllers/strategies/newStrategy.test.js`)
-
-### Creating a New API Endpoint
-
-1. **Define Route** (`src/routes/`)
-2. **Add Validation** (`src/validators/`)
-3. **Implement Controller** (`src/controllers/`)
-4. **Add Middleware** (if needed)
-5. **Document in Swagger**
-6. **Write Tests**
+5. Write integration tests
+6. Test locally: `npm run dev` and check `/api-docs`
 
 ### Database Migrations
-
-1. **Create Migration** (`supabase/migrations/`)
+1. Create migration file: `supabase/migrations/YYYYMMDDHHMMSS_description.sql`
+2. Add migration SQL:
    ```sql
-   -- YYYYMMDD_description.sql
-   ALTER TABLE ...
+   -- Add new column
+   ALTER TABLE recommendations 
+   ADD COLUMN confidence_score DECIMAL(3,2);
+   
+   -- Create index
+   CREATE INDEX idx_recommendations_confidence 
+   ON recommendations(confidence_score);
    ```
-
-2. **Update Schema** (`src/models/schema.sql`)
-
-3. **Apply via Supabase Dashboard**
-
-4. **Update Types** (`src/types/`)
+3. Update schema documentation in `src/models/schema.sql`
+4. Apply migration:
+   ```bash
+   supabase db push
+   # or via Supabase dashboard
+   ```
+5. Update TypeScript types in `src/types/`
+6. Test with seed data
 
 ### Deploying Edge Functions
-
 ```bash
 # Deploy single function
-npm run deploy:edge-function market-data
+supabase functions deploy market-data
 
-# Deploy all functions
-npm run deploy:edge-functions
+# Deploy with secrets
+supabase secrets set FINNHUB_API_KEY=your-key
+supabase functions deploy trading-signals
 
-# Test edge function
-curl https://your-project.supabase.co/functions/v1/market-data
+# Test locally
+supabase functions serve market-data --env-file .env.local
+
+# Invoke deployed function
+curl -H "Authorization: Bearer YOUR_ANON_KEY" \
+  https://your-project.supabase.co/functions/v1/market-data
 ```
 
-## Performance Optimization
+### Performance Optimization
+1. **Caching**: Node-cache with TTL
+   ```javascript
+   cache.set(`market:${symbol}`, data, 60); // 60 seconds
+   ```
+2. **Database**: Add indexes for frequently queried columns
+3. **API**: Enable compression, implement pagination
+4. **Monitoring**: Check `/metrics` endpoint
 
-### Caching Strategy
-- **Node-cache**: In-memory caching
-- **Cache Keys**: `market:${symbol}:${interval}`
-- **TTL**: 60 seconds for quotes, 5 minutes for candles
-
-### Database Optimization
-- Indexes on frequently queried columns
-- Connection pooling enabled
-- Prepared statements for repeated queries
-
-### API Performance
-- Gzip compression enabled
-- Rate limiting per user/IP
-- Pagination for list endpoints
-
-## Security Best Practices
-
-### Authentication
-- JWT tokens with 1-hour expiry
-- Refresh tokens for extended sessions
-- Secure cookie options in production
-
-### Input Validation
-- All inputs validated with Joi
-- SQL injection prevention via parameterized queries
-- XSS protection with input sanitization
-
-### API Security
-- CORS configured for allowed origins
-- Helmet.js for security headers
-- Rate limiting to prevent abuse
-
-## Monitoring and Debugging
-
-### Logging
-```javascript
-// Use structured logging
-logger.info('User login', { 
-  userId: user.id, 
-  timestamp: new Date() 
-});
-```
-
-### Health Checks
-- `/health` - Basic health check
-- `/health/detailed` - Database and service status
-
-### Error Tracking
-- All errors logged with stack traces
-- User-facing errors sanitized
-- Critical errors trigger alerts
-
-## Deployment
-
-### Docker
-```bash
-# Build image
-docker build -t trader-api .
-
-# Run container
-docker run -p 3000:3000 --env-file .env trader-api
-```
-
-### Production Checklist
-- [ ] Environment variables set
-- [ ] Database migrations applied
-- [ ] Edge functions deployed
-- [ ] SSL certificates configured
-- [ ] Monitoring enabled
-- [ ] Backups configured
+### Security Checklist
+- [ ] Input validation on all endpoints
+- [ ] SQL injection prevention (parameterized queries)
+- [ ] XSS protection (sanitize user input)
+- [ ] Rate limiting configured
+- [ ] CORS properly set
+- [ ] Secrets in environment variables
+- [ ] HTTPS only in production
 
 ## Troubleshooting
 
@@ -442,53 +344,60 @@ docker run -p 3000:3000 --env-file .env trader-api
 
 1. **TypeScript Errors**
    ```bash
-   npm run typecheck -- --noEmit false
+   # Check specific file
+   npx tsc --noEmit src/path/to/file.ts
+   
+   # See all errors
+   npm run typecheck
    ```
 
-2. **Test Failures**
+2. **Supabase Connection Issues**
+   - Verify credentials in .env
+   - Check Supabase dashboard for service status
+   - Ensure RLS policies allow access
+   - Check Edge Function logs
+
+3. **Test Failures**
    ```bash
-   npm run test:verbose -- --runInBand
+   # Run specific test
+   npm test -- path/to/test.js
+   
+   # Debug mode
+   npm run test:verbose
    ```
 
-3. **Supabase Connection**
-   - Check credentials
-   - Verify network access
-   - Check RLS policies
+4. **Rate Limiting Issues**
+   - Check `RATE_LIMIT_*` env vars
+   - Clear Redis cache if using
+   - Verify IP forwarding in production
 
 ### Debug Mode
 ```bash
+# Enable debug logging
 DEBUG=* npm run dev
+
+# Specific module
+DEBUG=express:* npm run dev
 ```
-
-## Contributing Guidelines
-
-1. **Code Standards**
-   - Follow existing patterns
-   - Add tests for new features
-   - Update documentation
-
-2. **Commit Messages**
-   - Use conventional commits
-   - Reference issues/PRs
-
-3. **Pull Requests**
-   - Run all tests
-   - Update CHANGELOG
-   - Request review
 
 ## Resources
 
-### Documentation
+### External Documentation
 - [Supabase Docs](https://supabase.com/docs)
-- [Express.js Guide](https://expressjs.com/en/guide/routing.html)
-- [TypeScript Handbook](https://www.typescriptlang.org/docs/handbook/intro.html)
+- [Express.js Guide](https://expressjs.com/)
+- [TypeScript Handbook](https://www.typescriptlang.org/docs/)
+- [Finnhub API Docs](https://finnhub.io/docs/api)
 
-### Internal Docs
-- `docs/ARCHITECTURE.md` - System design details
-- `docs/DEVELOPER_GUIDE.md` - Development setup
-- `docs/openapi.yaml` - API specification
+### Internal Documentation
+- `/docs/ARCHITECTURE.md` - System design and decisions
+- `/docs/DEVELOPER_GUIDE.md` - Detailed development setup
+- `/docs/TRADINGVIEW_WEBHOOK_GUIDE.md` - TradingView integration
+- `/docs/USER_MANUAL.md` - End-user documentation
+- `/flutter_integration/` - Mobile app integration guides
 
-### Support
-- GitHub Issues for bug reports
-- Discussions for questions
-- Wiki for additional guides
+### Important Notes
+- Always check for both .js and .ts versions of files during migration
+- Run tests before committing changes
+- Update documentation when adding features
+- Follow existing code patterns and conventions
+- Never commit sensitive data or API keys
