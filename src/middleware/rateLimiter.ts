@@ -2,6 +2,7 @@ const rateLimit = require('express-rate-limit');
 
 // TypeScript 타입 임포트
 import type { RateLimitRequestHandler } from 'express-rate-limit';
+import type { Request } from 'express';
 
 /**
  * Rate Limiting 설정
@@ -53,7 +54,7 @@ const createApiKeyRateLimiter = (tier: 'basic' | 'premium' | 'professional'): Ra
     message: `Rate limit exceeded for ${tier} tier. Please upgrade your subscription for higher limits.`,
     standardHeaders: true,
     legacyHeaders: false,
-    keyGenerator: (req) => {
+    keyGenerator: (req: Request) => {
       // API 키를 기준으로 rate limiting
       return (req.headers['x-api-key'] as string) || req.ip || 'unknown';
     },
@@ -89,7 +90,7 @@ const searchRateLimiter = rateLimit({
 
 // 동적 rate limiter (사용자별 커스텀 제한)
 const createDynamicRateLimiter = (
-  getLimit: (req: any) => { windowMs: number; max: number }
+  getLimit: (req: Request) => { windowMs: number; max: number }
 ): RateLimitRequestHandler => {
   return rateLimit({
     windowMs: 60000, // 기본값
@@ -97,8 +98,8 @@ const createDynamicRateLimiter = (
     message: 'Rate limit exceeded.',
     standardHeaders: true,
     legacyHeaders: false,
-    keyGenerator: (req) => req.user?.id || req.ip || 'unknown',
-    skip: (req) => {
+    keyGenerator: (req: Request) => (req as any).user?.id || req.ip || 'unknown',
+    skip: (req: Request) => {
       const limit = getLimit(req);
       // 동적으로 제한 설정
       (req as any).rateLimit = limit;

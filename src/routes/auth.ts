@@ -53,7 +53,7 @@ const validationRules = {
       .withMessage('New password must be at least 8 characters long')
       .matches(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]/)
       .withMessage('New password must contain at least one uppercase letter, one lowercase letter, one number, and one special character')
-      .custom((value, { req }) => value !== req.body.currentPassword)
+      .custom((value: string, { req }: { req: any }) => value !== req.body.currentPassword)
       .withMessage('New password must be different from current password')
   ],
   

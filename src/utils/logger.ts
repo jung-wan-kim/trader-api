@@ -15,10 +15,11 @@ if (!fs.existsSync(logDir)) {
 
 // 환경별 로그 레벨 설정
 type LogLevel = 'error' | 'warn' | 'info' | 'http' | 'verbose' | 'debug' | 'silly';
+type NodeEnv = 'development' | 'production' | 'test' | 'staging';
 
 const getLogLevel = (): LogLevel => {
-  const env = process.env.NODE_ENV || 'development';
-  
+  const env = (process.env.NODE_ENV || 'development') as NodeEnv;
+
   switch (env) {
     case 'production':
       return 'warn';
@@ -33,17 +34,23 @@ const getLogLevel = (): LogLevel => {
 };
 
 // 커스텀 로그 포맷
-const customFormat = winston.format.printf(({ level, message, timestamp, stack, ...metadata }) => {
+const customFormat = winston.format.printf(({ level, message, timestamp, stack, ...metadata }: {
+  level: string;
+  message: string;
+  timestamp: string;
+  stack?: string;
+  [key: string]: any;
+}) => {
   let msg = `${timestamp} [${level}]: ${message}`;
-  
+
   if (Object.keys(metadata).length > 0) {
     msg += ` ${JSON.stringify(metadata)}`;
   }
-  
+
   if (stack) {
     msg += `\n${stack}`;
   }
-  
+
   return msg;
 });
 
@@ -102,8 +109,9 @@ const stream: LoggerStream = {
 };
 
 // 로거 확장 인터페이스
-interface ExtendedLogger extends winston.Logger {
+interface ExtendedLogger {
   stream: LoggerStream;
+  [key: string]: any;
 }
 
 // 타입 확장

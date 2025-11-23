@@ -333,16 +333,16 @@ async function refreshToken(oldToken: string): Promise<string> {
   }
 }
 
-// CommonJS exports
-exports.authenticate = authenticate;
-exports.optionalAuthenticate = optionalAuthenticate;
-exports.requireSubscription = requireSubscription;
-exports.authenticateAPIKey = authenticateAPIKey;
-exports.refreshToken = refreshToken;
+// TypeScript exports
+export { authenticate, optionalAuthenticate, requireSubscription, authenticateAPIKey, refreshToken };
+export default authenticate;
 
-module.exports = authenticate;
-module.exports.authenticate = authenticate;
-module.exports.optionalAuthenticate = optionalAuthenticate;
-module.exports.requireSubscription = requireSubscription;
-module.exports.authenticateAPIKey = authenticateAPIKey;
-module.exports.refreshToken = refreshToken;
+// CommonJS exports (for compatibility)
+if (typeof module !== 'undefined' && module.exports) {
+  module.exports = authenticate;
+  module.exports.authenticate = authenticate;
+  module.exports.optionalAuthenticate = optionalAuthenticate;
+  module.exports.requireSubscription = requireSubscription;
+  module.exports.authenticateAPIKey = authenticateAPIKey;
+  module.exports.refreshToken = refreshToken;
+}
