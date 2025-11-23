@@ -55,6 +55,19 @@ npm run docs:serve     # Serve documentation locally (Jekyll)
 npm run docs:build     # Build documentation (Jekyll)
 ```
 
+### Supabase
+```bash
+supabase start                        # Start local Supabase
+supabase stop                         # Stop local Supabase
+supabase db push                      # Apply migrations to remote database
+supabase db reset                     # Reset local database
+supabase functions deploy <name>     # Deploy specific Edge Function
+supabase functions serve <name>      # Run Edge Function locally
+supabase functions logs <name>       # View Edge Function logs
+supabase secrets set KEY=value       # Set secret for Edge Functions
+supabase secrets list                # List all secrets
+```
+
 ## Architecture Overview
 
 ### Directory Structure
@@ -161,7 +174,11 @@ trader-api/
 - **Finnhub API**: Real-time market data and financial metrics
 - **Technical Analysis**: Built-in indicators (moving averages, RSI, etc.)
 - **WebSocket Support**: For real-time price updates
-- **TradingView**: Webhook integration for custom alerts
+- **TradingView Webhooks**: Custom alert integration
+  - Edge Function: `tradingview-webhook` (basic) and `tradingview-webhook-secure` (rate limited)
+  - Authentication: URL parameter `?secret=your-secret-key`
+  - Data stored in `tradingview_webhooks` table
+  - See `/docs/TRADINGVIEW_WEBHOOK_GUIDE.md` for setup
 
 ### Subscription Tiers
 1. **Basic (Free)**: 1 recommendation/week, basic indicators
@@ -182,6 +199,37 @@ trader-api/
 - **Test Database**: Separate Supabase project for testing
 
 ## Development Workflow
+
+### Local Development Setup
+1. Clone repository and install dependencies:
+   ```bash
+   git clone <repository-url>
+   cd trader-api
+   npm install
+   ```
+
+2. Set up environment variables:
+   ```bash
+   cp .env.example .env
+   # Edit .env with your credentials
+   ```
+
+3. Start local Supabase (optional):
+   ```bash
+   supabase start
+   # Note: Requires Docker
+   ```
+
+4. Run development server:
+   ```bash
+   npm run dev
+   # Server starts on http://localhost:3000
+   ```
+
+5. Access API documentation:
+   ```
+   http://localhost:3000/api-docs
+   ```
 
 ### TypeScript Migration Status
 - **Completed**: Core types, logger, auth middleware, rate limiter
@@ -225,22 +273,55 @@ SUPABASE_SERVICE_ROLE_KEY=your-service-role-key  # For admin operations
 
 # External APIs
 FINNHUB_API_KEY=your-finnhub-api-key
+FINNHUB_BASE_URL=https://finnhub.io/api/v1
 
 # Security
 JWT_SECRET=your-jwt-secret-min-32-chars
-ENCRYPTION_KEY=your-encryption-key  # Optional
+JWT_EXPIRES_IN=7d
+BCRYPT_ROUNDS=12
+SESSION_SECRET=your-session-secret-key
 
 # Server Configuration
 PORT=3000
 NODE_ENV=development  # development, production, test
 
 # Rate Limiting
-RATE_LIMIT_WINDOW=15  # minutes
-RATE_LIMIT_MAX=100    # requests per window
+RATE_LIMIT_WINDOW_MS=900000  # 15 minutes in milliseconds
+RATE_LIMIT_MAX_REQUESTS=100
 
-# Optional
+# CORS
+CORS_ORIGIN=http://localhost:3000,http://localhost:3001
+
+# Logging
 LOG_LEVEL=info        # debug, info, warn, error
-CORS_ORIGIN=http://localhost:3001  # Frontend URL
+LOG_FILE_ERROR=logs/error.log
+LOG_FILE_COMBINED=logs/combined.log
+
+# Feature Flags
+ENABLE_WEBSOCKET=true
+ENABLE_CACHE=true
+ENABLE_RATE_LIMITING=true
+
+# Health Check
+HEALTH_CHECK_PATH=/health
+
+# Optional: Monitoring
+SENTRY_DSN=your-sentry-dsn
+
+# Optional: Email
+EMAIL_HOST=smtp.gmail.com
+EMAIL_PORT=587
+EMAIL_USER=your-email@gmail.com
+EMAIL_PASS=your-app-password
+
+# Optional: Redis (for distributed caching)
+REDIS_URL=redis://localhost:6379
+```
+
+**Edge Functions Environment Variables** (set via `supabase secrets set`):
+```bash
+TRADINGVIEW_WEBHOOK_SECRET=your-webhook-secret  # For TradingView webhook authentication
+FINNHUB_API_KEY=your-key                        # For market-data Edge Function
 ```
 
 ## Common Tasks
@@ -308,8 +389,12 @@ CORS_ORIGIN=http://localhost:3001  # Frontend URL
 # Deploy single function
 supabase functions deploy market-data
 
+# Deploy all functions
+supabase functions deploy
+
 # Deploy with secrets
 supabase secrets set FINNHUB_API_KEY=your-key
+supabase secrets set TRADINGVIEW_WEBHOOK_SECRET=your-webhook-secret
 supabase functions deploy trading-signals
 
 # Test locally
@@ -318,6 +403,34 @@ supabase functions serve market-data --env-file .env.local
 # Invoke deployed function
 curl -H "Authorization: Bearer YOUR_ANON_KEY" \
   https://your-project.supabase.co/functions/v1/market-data
+
+# View function logs
+supabase functions logs market-data --tail
+```
+
+### TradingView Webhook Setup
+```bash
+# 1. Set webhook secret
+supabase secrets set TRADINGVIEW_WEBHOOK_SECRET="your-secret-key"
+
+# 2. Deploy webhook function
+supabase functions deploy tradingview-webhook
+
+# 3. Get webhook URL
+echo "https://YOUR-PROJECT-REF.supabase.co/functions/v1/tradingview-webhook?secret=your-secret-key"
+
+# 4. Test webhook
+curl -X POST 'https://YOUR-PROJECT-REF.supabase.co/functions/v1/tradingview-webhook?secret=your-secret-key' \
+  -H "Content-Type: application/json" \
+  -d '{
+    "symbol": "AAPL",
+    "action": "buy",
+    "price": 150.25,
+    "volume": 1000000,
+    "time": "2025-01-17 10:30:00",
+    "strategy": "Test Strategy",
+    "timeframe": "1h"
+  }'
 ```
 
 ### Performance Optimization
